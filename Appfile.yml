@@ -1,0 +1,32 @@
+apiVersion: scone/5.8
+kind: genAppImage
+
+# define environment variables
+#  - local ones are only visible for this service
+#  - global ones are defined for all services in a mesh
+
+environment:
+  local:
+    - name: API_PASSWORD # get value from Meshfile
+      value: "$$SCONE::password"  # my password
+  global:     # values defined/overwritten in Meshfile
+    - name: API_USER  # must be define in Meshfile
+
+   # define some key/value pairs used in handlebars  
+
+
+# define secrets that are managed by CAS - not visible to the outside
+secrets:
+  global: 
+  - name: password
+    kind: ascii
+    size: 10
+
+build:
+  name: python_hello_user
+  kind: python
+  to: registry.scontain.com:5050/cicd/python_hello_user:latest
+  pwd: /python
+  command: python3 print_env.py
+  copy:
+    - print_env.py
