@@ -1,8 +1,8 @@
 # SCONE MESH EXAMPLE
 
-## Hello World
+## Hello World!
 
-We start with a simple "Hello World" example, in which we pass a user ID and a password to a simple Python program.
+We start with a simple "Hello World" example, in which we pass a user ID and a password to a simple Python program. Neither cloud provider nor system admins will be able to see the parameters or change the program.
 
 This program could look as follows:
 
@@ -13,38 +13,70 @@ import os
 API_USER = os.getenv('API_USER')
 API_PASSWORD = os.environ.get('API_PASSWORD')
 
-# Print these
-print(f"Hello '{API_USER}' - thanks for passing along the API_PASSWORD")
-
 # Exit with error if one is not defined
 if API_USER == None or API_PASSWORD == None:
     print("Not all required environment variables are defined!")
     exit(1)
+
+# Print API_USER - this is - unlike the API_PASSWORD - not confidential
+print(f"Hello '{API_USER}' - thanks for passing along the API_PASSWORD")
 ```
 
 ## Objectives
 
-We want to make sure that the password cannot be leaked: even a system admin on the platform cannot see that password.
+Our objective is that it must be impossible both:
+
+1. to view and modify the password, and
+2. to modify the program
+
+by both  
+
+1. a system admin or any other user with root access, and
+2. a cloud provider or anybody else with physical access to the hardware.
+
+Using SCONE it is also possible to protect the code confidentiality so that nobody can view the program, but we do not include this feature in this example.
+
+## Create Manifest Files
+
+The first thing you need to do is to create the manifest files describing your services and how they should be connected in your application.
+The manifests are used to build confidential container images and to generate and upload the security policy for your confidential application. This is done in one **service manifest** file per service and one **mesh manifest** file (a.k.a. **Meshfile**), which is used to generate the security policies and global variables.
+
+In this example, there is only one service and both its service and mesh manifest files have been created for you (`service.yml` and `mesh.yml`).
+Note that you do not need a service manifest for **curated confidential service** like `memcached`, `nginx`, `MariaDB`, etc: the images already contain all required information.  
 
 ## Quick Start
 
-To build the application image, execute
+Once you have created your manifest files, you only need to perform the following three steps to build and run your confidential application on Kubernetes:
+
+1. Build the service OCI container image:
+
+**TODO** `change from -m to -f`
 
 ```bash
-scone apply -m Appfile.yml
+sconectl apply -f service.yml
 ```
 
-To build the application, execute
+2. Build and upload the security policy for the application using:
 
 ```bash
-scone apply -m meshfile.yml
+sconectl apply -f mesh.yml
 ```
 
-**todo**: explain `helm install`
+3. The second step generates a `helm` chart and you can start this application by executing:
+
+```bash
+helm install python_app target/helm
+```
+
+That's it! But in case you are interested in what is going on under the hood, we explain the steps in detail below.
+
+### Note
+
+Ensure that the container images that are generated in step 1. are not yet permitted to run. They are only permitted to run after the security policies are created or updated in step 2. Ensure that the images are only deployed after step 2. For example, you might push the images only after step 2 to the cluster.
 
 ## Building a Confidential Image
 
-We can build a confidential container image with the help of a manifest of kind `genAppImage`.
+We can build a confidential container image with the help of a manifest of kind `genImage`.
 
 Our objective is to build a confidential container image to run this application encrypted and ensure that environment variables are securely passed to the application only after the application was attested and verified.
 
@@ -68,10 +100,11 @@ We build the confidential container image with the help of the `build` section:
 - `command`:  this is the command line. This is protected to ensure that an adversary cannot change the arguments of our program. Changing the arguments would permit the adversary, for example, to print the value of the environment variables.
 - `copy`: a list of files or directories to copy into the image.
 
+**TODO** `change from genAppImage to genImage`
 
 ```yml
 apiVersion: scone/5.8
-kind: genAppImage
+kind: genImage
 
 # define environment variables
 #  - local ones are only visible for this service
@@ -79,10 +112,10 @@ kind: genAppImage
 
 environment:
   local:
-    - name: API_PASSWORD # get value from Meshfile
+    - name: API_PASSWORD # required by Python program
       value: "$$SCONE::password"  # my password
-  global:     # values defined/overwritten in Meshfile
-    - name: API_USER  # must be define in Meshfile
+  global:     # global values are defined/overwritten in Meshfile
+    - name: API_USER  # required by Python program
 
    # define some key/value pairs used in handlebars  
 
@@ -123,13 +156,14 @@ The service section describes the set of services from which this application is
 - `name`: is a unique name of this service
 - `image`: is the name of the image.
 
+**TODO** `add default alias and check that cas is always defined`
+
 ```yml
 apiVersion: scone/5.8
 kind: mesh
 
 cas:
   - name: cas # cas used to store the policy of this application
-    alias: ["image", "security", "access", "attestation"] # use alias in case CAS instance has multiple roles
     cas_url: edge.scone-cas.cf  # exported as {{cas_cas_cas_url}}
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
@@ -153,7 +187,7 @@ In case you want to run it from your development machine inside of a container,
 you can define an `alias`:
 
 ```bash
-alias scone="docker run -it --rm \
+alias sconectl="docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v \"$HOME/.docker:/root/.docker\" \
     -v \"$HOME/.cas:/root/.cas\" \
@@ -163,7 +197,9 @@ alias scone="docker run -it --rm \
     registry.scontain.com:5050/cicd/sconecli:latest"
 ```
 
-Add this to you shell configuration file (like `.bashrc`).
+Add this to you shell configuration file (like `.bashrc`). Alternatively, we also provide a simple Rust script to implement this functionality.
+
+**TODO** `write simple rust script instead of using alias`
 
 ### Example
 
@@ -171,7 +207,7 @@ Depending what Manifest you apply, different command line options might be avail
 To get a list of options, for a given manifest, you can execute:
 
 ```bash
-scone apply -m Appfile.yml --help
+scone apply -f Appfile.yml --help
 ```
 
 ## Building a Service Image
@@ -179,5 +215,5 @@ scone apply -m Appfile.yml --help
 We can now apply a manifest as follows:
 
 ```bash
-scone apply -m Appfile.yml 
+scone apply -f Appfile.yml 
 ```
