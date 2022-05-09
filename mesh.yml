@@ -12,7 +12,7 @@ policy:
 
 # define environment variables   
 env:
-  - key: API_USER 
+  - name: API_USER 
     value: myself
 
 

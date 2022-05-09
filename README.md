@@ -1,8 +1,16 @@
-# SCONE MESH EXAMPLE
+# Confidential Hello World!
+
+We show how to provide cloud-native applications with secrets such that **nobody** except our program can access these secrets.
 
 ## Hello World!
 
-We start with a simple "Hello World" example, in which we pass a user ID and a password to a simple Python program. Neither cloud provider nor system admins will be able to see the parameters or change the program.
+We start with a simple *Hello World* example, in which we pass a user ID and a password to a simple Python program. This is actually an API user and password, i.e., no human need or should know the password: Only *authorized* applications should have access to the password. This means that we need to define which programs are authorized and which are not.
+
+We want to execute this program in a typical environment that is managed by a cloud provider. More concretely, we want to run this program as a process running in a container running in a pod, running in a Kubernetes node, running in a VM running on a server running in some data center. So there are multiple nested layers that one might need to be aware of. These days, we want to outsource the management of these layers to an external provider.
+
+The cloud provider operates the hardware, the cloud stack, the operating system, and Kubernetes. What we need to ensure is that nobody (except our program) can change read our password (we ensure confidentiality) nor can change the user ID (aka )
+
+ Neither cloud provider nor system admins will be able to see the parameters or change the program.
 
 This program could look as follows:
 
@@ -19,7 +27,7 @@ if API_USER == None or API_PASSWORD == None:
     exit(1)
 
 # Print API_USER - this is - unlike the API_PASSWORD - not confidential
-print(f"Hello '{API_USER}' - thanks for passing along the API_PASSWORD")
+print(f"Hello '{API_USER}' - we protect the confidentiality of API_PASSWORD")
 ```
 
 ## Objectives
@@ -50,13 +58,11 @@ Once you have created your manifest files, you only need to perform the followin
 
 1. Build the service OCI container image:
 
-**TODO** `change from -m to -f`
-
 ```bash
 sconectl apply -f service.yml
 ```
 
-2. Build and upload the security policy for the application using:
+1. Build and upload the security policy for the application using:
 
 ```bash
 sconectl apply -f mesh.yml
@@ -88,7 +94,7 @@ To do so, we define environment variables in the following way:
   - We define a secret with name `password` as part of the secrets section. This has a length of 10 characters that are randomly selected by CAS.
   - The value of this secret can be referred to by "$$SCONE::password". This value is only available for our Python program. In general, we permit to share secrets amongst the services of the same application mesh only.
   - We define this locally in the manifest for this service. Hence, we define it in section `local` - this cannot be modified in the `Meshfile` (i.e., a manifest that describes how to connect services).
-- `API_USER` is an environment variable that is defined in the `Meshfile` . Hence, we add it to the `global` section. We could define a default value in the 
+- `API_USER` is an environment variable that is defined in the `Meshfile` . Hence, we add it to the `global` section. We could define a default value in the service manifest.
 
 
 We build the confidential container image with the help of the `build` section:
@@ -100,11 +106,9 @@ We build the confidential container image with the help of the `build` section:
 - `command`:  this is the command line. This is protected to ensure that an adversary cannot change the arguments of our program. Changing the arguments would permit the adversary, for example, to print the value of the environment variables.
 - `copy`: a list of files or directories to copy into the image.
 
-**TODO** `change from genAppImage to genImage`
-
 ```yml
 apiVersion: scone/5.8
-kind: genImage
+kind: genservice
 
 # define environment variables
 #  - local ones are only visible for this service
@@ -131,6 +135,7 @@ build:
   name: python_hello_user
   kind: python
   to: registry.scontain.com:5050/cicd/python_hello_user:latest
+  stable: registry.scontain.com:5050/cicd/python_hello_user:stable # version that runs now and that one could roll back to ; optional
   pwd: /python
   command: python3 print_env.py
   copy:
@@ -143,20 +148,15 @@ A cloud-native application typically consists of multiple services. In this exam
 
 To run an application, we need to specify which CAS instance we want to use. Actually, we typically can use multiple CAS instances for various aspects.
 
-TODO: remove alias by having a default alias in case it is not given.
-
 Each application must define its own unique CAS namespace. This could have the same name as the namespace that we use to run this application in Kubernetes.
 
 We can define the environment variables that are marked as `global` by the individual services. If no default value was given, we must define a value here.
-
-Todo: `key` will change to `name`
 
 The service section describes the set of services from which this application is composed of:
 
 - `name`: is a unique name of this service
 - `image`: is the name of the image.
 
-**TODO** `add default alias and check that cas is always defined`
 
 ```yml
 apiVersion: scone/5.8
@@ -183,6 +183,19 @@ services:
 
 ## Setup
 
+We  provide a simple Rust script to implement `sconectl`. Alternatively, you can just define an `alias` as part of your shell.
+
+### Rust Script
+
+First, ensure that you have `Rust` installed on you system. If not, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
+
+```bash
+cargo install rust-script
+```
+
+
+### Shell `alias`
+
 In case you want to run it from your development machine inside of a container,
 you can define an `alias`:
 
@@ -197,9 +210,7 @@ alias sconectl="docker run -it --rm \
     registry.scontain.com:5050/cicd/sconecli:latest"
 ```
 
-Add this to you shell configuration file (like `.bashrc`). Alternatively, we also provide a simple Rust script to implement this functionality.
-
-**TODO** `write simple rust script instead of using alias`
+Add this to you shell configuration file (like `.bashrc`). 
 
 ### Example
 
@@ -207,7 +218,7 @@ Depending what Manifest you apply, different command line options might be avail
 To get a list of options, for a given manifest, you can execute:
 
 ```bash
-scone apply -f Appfile.yml --help
+sconectl apply -f service.yml --help
 ```
 
 ## Building a Service Image
@@ -215,5 +226,6 @@ scone apply -f Appfile.yml --help
 We can now apply a manifest as follows:
 
 ```bash
-scone apply -f Appfile.yml 
+sconectl apply -f service.yml 
 ```
+

@@ -1,5 +1,5 @@
 apiVersion: scone/5.8
-kind: genAppImage
+kind: genservice
 
 # define environment variables
 #  - local ones are only visible for this service
