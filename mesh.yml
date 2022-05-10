@@ -14,7 +14,10 @@ policy:
 env:
   - name: API_USER 
     value: myself
-
+  - name: imagePullSecrets
+    value: SconeApps
+  - name: APP_SERVICE_PORT
+    value: 443
 
 services:
   - name: python_app

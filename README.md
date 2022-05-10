@@ -8,9 +8,9 @@ We start with a simple *Hello World* example, in which we pass a user ID and a p
 
 We want to execute this program in a typical environment that is managed by a cloud provider. More concretely, we want to run this program as a process running in a container running in a pod, running in a Kubernetes node, running in a VM running on a server running in some data center. So there are multiple nested layers that one might need to be aware of. These days, we want to outsource the management of these layers to an external provider.
 
-The cloud provider operates the hardware, the cloud stack, the operating system, and Kubernetes. What we need to ensure is that nobody (except our program) can change read our password (we ensure confidentiality) nor can change the user ID (aka )
+The cloud provider operates the hardware, the cloud stack, the operating system, and Kubernetes. What we need to ensure is that nobody (except our program) can change read our password (we ensure confidentiality) nor can change the user ID.
 
- Neither cloud provider nor system admins will be able to see the parameters or change the program.
+Neither cloud provider nor system admins will be able to see the parameters or change the program.
 
 This program could look as follows:
 
@@ -62,7 +62,7 @@ Once you have created your manifest files, you only need to perform the followin
 sconectl apply -f service.yml
 ```
 
-1. Build and upload the security policy for the application using:
+2. Build and upload the security policy for the application using:
 
 ```bash
 sconectl apply -f mesh.yml
@@ -183,34 +183,16 @@ services:
 
 ## Setup
 
-We  provide a simple Rust script to implement `sconectl`. Alternatively, you can just define an `alias` as part of your shell.
-
-### Rust Script
-
-First, ensure that you have `Rust` installed on you system. If not, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
+We have implemented `sconectl` in Rust. In case, you have Rust already installed, just execute:
 
 ```bash
-cargo install rust-script
+cargo install sconectl
 ```
 
+## Troubleshooting
 
-### Shell `alias`
+If this `cargo` would fail, ensure that you have `Rust` installed on you system. If not yet installed, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
 
-In case you want to run it from your development machine inside of a container,
-you can define an `alias`:
-
-```bash
-alias sconectl="docker run -it --rm \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v \"$HOME/.docker:/root/.docker\" \
-    -v \"$HOME/.cas:/root/.cas\" \
-    -v \"$HOME/.scone:/root/.scone\" \
-    -v \"\$PWD:/root\" \
-    -w /root \
-    registry.scontain.com:5050/cicd/sconecli:latest"
-```
-
-Add this to you shell configuration file (like `.bashrc`). 
 
 ### Example
 
