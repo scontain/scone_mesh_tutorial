@@ -7,6 +7,8 @@ kind: genservice
 
 environment:
   local:
+    - name: SCONE_LOG
+      value: debug
     - name: API_PASSWORD # get value from Meshfile
       value: "$$SCONE::password$$"  # my password
   global:     # values defined/overwritten in Meshfile

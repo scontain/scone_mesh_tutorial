@@ -1,10 +1,10 @@
 # Confidential Hello World!
 
-We show how to provide cloud-native applications with secrets such that **nobody** except our program can access these secrets.
+We show how to provide cloud-native applications with secrets such that **nobody** except our program can access these secrets. In fact, not even users with root privileges and cloud providers with hardware access can access them.
 
 ## Hello World!
 
-We start with a simple *Hello World* example, in which we pass a user ID and a password to a simple Python program. This is actually an API user and password, i.e., no human need or should know the password: Only *authorized* applications should have access to the password. This means that we need to define which programs are authorized and which are not.
+We start with a simple *Hello World* example, in which we pass a user ID and a password to a Python program. This is actually an API user and password, i.e., no human need or should know the password: Only *authorized* applications should have access to the password. This means that we need to define which programs are authorized and which are not.
 
 We want to execute this program in a typical environment that is managed by a cloud provider. More concretely, we want to run this program as a process running in a container running in a pod, running in a Kubernetes node, running in a VM running on a server running in some data center. So there are multiple nested layers that one might need to be aware of. These days, we want to outsource the management of these layers to an external provider.
 
@@ -116,10 +116,10 @@ kind: genservice
 
 environment:
   local:
-    - name: API_PASSWORD # required by Python program
-      value: "$$SCONE::password"  # my password
-  global:     # global values are defined/overwritten in Meshfile
-    - name: API_USER  # required by Python program
+    - name: API_PASSWORD # get value from Meshfile
+      value: "$$SCONE::password$$"  # my password
+  global:     # values defined/overwritten in Meshfile
+    - name: API_USER  # must be define in Meshfile
 
    # define some key/value pairs used in handlebars  
 
@@ -135,7 +135,6 @@ build:
   name: python_hello_user
   kind: python
   to: registry.scontain.com:5050/cicd/python_hello_user:latest
-  stable: registry.scontain.com:5050/cicd/python_hello_user:stable # version that runs now and that one could roll back to ; optional
   pwd: /python
   command: python3 print_env.py
   copy:
@@ -164,6 +163,7 @@ kind: mesh
 
 cas:
   - name: cas # cas used to store the policy of this application
+    alias: ["image", "security", "access", "attestation"] # use alias in case CAS instance has multiple roles
     cas_url: edge.scone-cas.cf  # exported as {{cas_cas_cas_url}}
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
@@ -172,9 +172,12 @@ policy:
 
 # define environment variables   
 env:
-  - key: API_USER 
+  - name: API_USER 
     value: myself
-
+  - name: imagePullSecrets
+    value: SconeApps
+  - name: APP_SERVICE_PORT
+    value: 443
 
 services:
   - name: python_app
@@ -191,8 +194,7 @@ cargo install sconectl
 
 ## Troubleshooting
 
-If this `cargo` would fail, ensure that you have `Rust` installed on you system. If not yet installed, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
-
+If this `cargo` would fail, ensure that you have `Rust` installed on your system and it is up-to-date (you might get syntax errors if your Rust installation is old). If not yet installed, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
 
 ### Example
 

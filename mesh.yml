@@ -15,7 +15,7 @@ env:
   - name: API_USER 
     value: myself
   - name: imagePullSecrets
-    value: SconeApps
+    value: sconeapps
   - name: APP_SERVICE_PORT
     value: 443
 
