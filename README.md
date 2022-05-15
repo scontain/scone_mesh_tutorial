@@ -60,7 +60,7 @@ Once you have created your manifest files, you only need to perform the followin
 1. Build the service OCI container image (for each service):
 
 ```bash
-sconectl apply -f service.yml
+sconectl apply -f service.yml --no-push
 ```
 
 2. Build and upload the security policies for all services of the application using:
@@ -85,9 +85,9 @@ But in case you are interested in what is going on under the hood, we explain th
 
 ### Notes
 
-- In some deployments, new images might be automatically deployed. If this is the case, ensure that the container images that are generated in step 1. are not deployed automatically.
+- In some deployments, new images might be automatically deployed. If this is the case, ensure that the container images that are generated in step 1. are not deployed automatically by adding option `--no-push`.
 - Container images are only permitted to deployed after the security policies are created or updated in step 2. Ensure that the images are only deployed after step 2.
-- For example, you might push the images only after step 2 to the cluster. The security policy works even if you change the container image name.
+- For example, you might push the images only after step 2 to the cluster.
 
 ## Building a Confidential Image
 
@@ -234,10 +234,10 @@ sconectl apply -f service.yml -p
 
 ### Building a Service Image
 
-We can now apply a manifest as follows:
+We can now apply a manifest as follows (and we do not want to push to the repo just yet):
 
 ```bash
-sconectl apply -f service.yml 
+sconectl apply -f service.yml --no-push
 ```
 
 ### Displaying Environment Variables
