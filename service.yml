@@ -7,17 +7,16 @@ kind: genservice
 
 environment:
   local:
+    - name: SCONE_HEAP
+      value: 760M
     - name: SCONE_LOG
-      value: debug
-    - name: API_PASSWORD # get value from Meshfile
-      value: "$$SCONE::password$$"  # my password
+      value: error
+    - name: API_PASSWORD
+      value: "$$SCONE::password$$"  # get from CAS
   global:     # values defined/overwritten in Meshfile
-    - name: API_USER  # must be define in Meshfile
+    - name: API_USER  # get value from Meshfile
 
-   # define some key/value pairs used in handlebars  
-
-
-# define secrets that are managed by CAS - not visible to the outside
+# define secrets that are managed by CAS 
 secrets:
   global: 
   - name: password

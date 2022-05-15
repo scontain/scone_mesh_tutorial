@@ -50,19 +50,20 @@ The first thing you need to do is to create the manifest files describing your s
 The manifests are used to build confidential container images and to generate and upload the security policy for your confidential application. This is done in one **service manifest** file per service and one **mesh manifest** file (a.k.a. **Meshfile**), which is used to generate the security policies and global variables.
 
 In this example, there is only one service and both its service and mesh manifest files have been created for you (`service.yml` and `mesh.yml`).
-Note that you do not need a service manifest for **curated confidential service** like `memcached`, `nginx`, `MariaDB`, etc: the images already contain all required information.  
+
+Note that you do not need a service manifest for **curated confidential service** like `memcached`, `nginx`, `MariaDB`, etc: the images already contain all required information. We show this in a different tutorial.
 
 ## Quick Start
 
 Once you have created your manifest files, you only need to perform the following three steps to build and run your confidential application on Kubernetes:
 
-1. Build the service OCI container image:
+1. Build the service OCI container image (for each service):
 
 ```bash
 sconectl apply -f service.yml
 ```
 
-2. Build and upload the security policy for the application using:
+2. Build and upload the security policies for all services of the application using:
 
 ```bash
 sconectl apply -f mesh.yml
@@ -71,35 +72,51 @@ sconectl apply -f mesh.yml
 3. The second step generates a `helm` chart and you can start this application by executing:
 
 ```bash
-helm install python_app target/helm
+helm install pythonapp target/helm/charts/python_hello_user
 ```
 
-That's it! But in case you are interested in what is going on under the hood, we explain the steps in detail below.
+That's it! You can now inspect the output with `kubectl` (assuming you have  `kubectl` command completion installed):
 
-### Note
+```bash
+kubectl logs pythonapp<TAB>
+```
 
-Ensure that the container images that are generated in step 1. are not yet permitted to run. They are only permitted to run after the security policies are created or updated in step 2. Ensure that the images are only deployed after step 2. For example, you might push the images only after step 2 to the cluster.
+But in case you are interested in what is going on under the hood, we explain the steps in some more details below.
+
+### Notes
+
+- In some deployments, new images might be automatically deployed. If this is the case, ensure that the container images that are generated in step 1. are not deployed automatically.
+- Container images are only permitted to deployed after the security policies are created or updated in step 2. Ensure that the images are only deployed after step 2.
+- For example, you might push the images only after step 2 to the cluster. The security policy works even if you change the container image name.
 
 ## Building a Confidential Image
 
-We can build a confidential container image with the help of a manifest of kind `genImage`.
+Our objective is to build a confidential container image to run this application in an encrypted memory region (aka enclave) and ensure that environment variables are securely passed to the application only after the application was attested and verified. Otherwise, one could, by changing the arguments passed to a Python engine, run completely different functionality.
 
-Our objective is to build a confidential container image to run this application encrypted and ensure that environment variables are securely passed to the application only after the application was attested and verified.
+Note that we want to outsource the management of Kubernetes to an external provider. Hence, we do not want Kubernetes nor any Kubernetes admin to be able to see the value of our environment variables - at no time: neither during the runtime nor during the startup time. Of course, only our original Python program should be able to be able to access the value. Any modification of the Python program must be detected.
 
-Note that we want to outsouce the management of Kubernetes to an external provider. Hence, we do not want Kubernetes nor any Kubernetes admin to be able to see the value of our environment variables - at no time: neither during the runtime nor during the startup time. Of course, only our original Python program should be able to be able to access the value. Any modification of the Python program must be detected.
+Note also that the cloud provider takes care of the integrity of the Kubernetes cluster using traditional isolation mechanisms (e.g., isolation using VMs and containers).  Kubernetes will not have access to any data, code, or key material of the application: their confidentiality, integrity and freshness will all be protected by SCONE. 
 
-To do so, we define environment variables in the following way:
+We can build a confidential container images and applications consisting of multiple container images with the help of a manifests:
 
-- `API_PASSWORD` is an API password and should not be known by anybody. Hence, we ask SCONE CAS (Configuration and Attestation Service) to randomly select it inside an enclave.
-  - We define a secret with name `password` as part of the secrets section. This has a length of 10 characters that are randomly selected by CAS.
-  - The value of this secret can be referred to by "$$SCONE::password". This value is only available for our Python program. In general, we permit to share secrets amongst the services of the same application mesh only.
+- `meshfile`:  describes how to build an application consisting of one or more images. This is defined by the application owner. This can define values that need to be **integrity** and **freshness** protected. We should avoid to define values that need to be **confidential** since admins of the application owner might see the meshfile.
+- `service manifest`: describes how to build a confidential image to deploy a confidential service. For example, we want to run a Python program inside an enclave. This `service manifest` is defined by the application or service owner.
+- `security policy`:  describes how to attest a service and to provision secrets / configuration to a service instance. This is automatically derived form the `meshfile` and `service file`. It can generate secrets that now admin can see. These secrets can be generated inside of an enclave or these secrets can be retrieved from an external key store like a HSM.
+
+### Service Manifest
+
+Our Python program uses environment variables that need to be protected:
+
+- `API_USER` is an environment variable that is defined in the `Meshfile` . Hence, we add it to the `global` section. We could define a default value in the service manifest. This variable is integrity protected. While a cloud provider would not be able to see the value, an admin of the application owner might be able to see this. (Note that our Python program prints this value on the console indicating that we only want to protect its integrity).
+
+- `API_PASSWORD` is an API password and should not be known by anybody - not even an admin by the application owner. Hence, we ask SCONE CAS (Configuration and Attestation Service) to randomly select it inside an enclave.
+  - We define a secret with name `password` as part of the secrets section. This has a length of 10 characters that are randomly selected by SCONE CAS.
+  - The value of this secret can be referred to by "$$SCONE::password". This value is only available for our Python program. In general, we recommend to share secrets amongst the services of the same application mesh only.
   - We define this locally in the manifest for this service. Hence, we define it in section `local` - this cannot be modified in the `Meshfile` (i.e., a manifest that describes how to connect services).
-- `API_USER` is an environment variable that is defined in the `Meshfile` . Hence, we add it to the `global` section. We could define a default value in the service manifest.
-
 
 We build the confidential container image with the help of the `build` section:
 
-- `name`: define the name of this service
+- `name`: set the name of the service deployed with this container image.
 - `kind`: `Python says that we need a Python engine to execute this program
 - `to`: is the name of the generated image
 - `pwd`: the working directory in which our Python program will be located
@@ -116,15 +133,16 @@ kind: genservice
 
 environment:
   local:
-    - name: API_PASSWORD # get value from Meshfile
-      value: "$$SCONE::password$$"  # my password
+    - name: SCONE_HEAP
+      value: 760M
+    - name: SCONE_LOG
+      value: error
+    - name: API_PASSWORD
+      value: "$$SCONE::password$$"  # get from CAS
   global:     # values defined/overwritten in Meshfile
-    - name: API_USER  # must be define in Meshfile
+    - name: API_USER  # get value from Meshfile
 
-   # define some key/value pairs used in handlebars  
-
-
-# define secrets that are managed by CAS - not visible to the outside
+# define secrets that are managed by CAS 
 secrets:
   global: 
   - name: password
@@ -141,7 +159,7 @@ build:
     - print_env.py
 ```
 
-## Building a Confidential Application
+## Application Manifest (aka `meshfile`)
 
 A cloud-native application typically consists of multiple services. In this example, we start with one service.
 
@@ -155,7 +173,6 @@ The service section describes the set of services from which this application is
 
 - `name`: is a unique name of this service
 - `image`: is the name of the image.
-
 
 ```yml
 apiVersion: scone/5.8
@@ -180,7 +197,7 @@ env:
     value: 443
 
 services:
-  - name: python_app
+  - name: pythonapp
     image: registry.scontain.com:5050/cicd/python_hello_user:latest
 ```
 
@@ -192,20 +209,30 @@ We have implemented `sconectl` in Rust. In case, you have Rust already installed
 cargo install sconectl
 ```
 
-## Troubleshooting
+### Troubleshooting
 
-If this `cargo` would fail, ensure that you have `Rust` installed on your system and it is up-to-date (you might get syntax errors if your Rust installation is old). If not yet installed, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
+If this `cargo` would fail, ensure that
 
-### Example
+- you have `Rust` installed on your system. and 
+- it is up-to-date (you might get syntax errors if your Rust installation is old).
 
-Depending what Manifest you apply, different command line options might be available.
-To get a list of options, for a given manifest, you can execute:
+If Rust is not yet installed or too old, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
+
+## Example
+
+Depending what Manifest you apply, different command line options might be available. To get a list of options, for a given manifest, you can execute:
 
 ```bash
 sconectl apply -f service.yml --help
 ```
 
-## Building a Service Image
+You can print which environment variables you can define and also their default values by executing:
+
+```bash
+sconectl apply -f service.yml -p
+```
+
+### Building a Service Image
 
 We can now apply a manifest as follows:
 
@@ -213,3 +240,10 @@ We can now apply a manifest as follows:
 sconectl apply -f service.yml 
 ```
 
+### Displaying Environment Variables
+
+We can show which variables must be defined in a `meshfile` using option `-p`:
+
+```bash
+sconectl apply -f mesh.yml -p
+```
