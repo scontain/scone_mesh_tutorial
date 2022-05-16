@@ -2,11 +2,14 @@
 
 We show how to provide cloud-native applications with secrets such that **nobody** except our program can access these secrets. In fact, not even users with root privileges and cloud providers with hardware access can access them. We need to protect the data during runtime but also the secrets that we provision to the application:
 
-![Confidential Configuration](configuration.png)
+![Objectives](objective.png)
 
 ## Hello World!
 
 We start with a simple *Hello World* example, in which we pass a user ID and a password to a Python program. This is actually an API user and password, i.e., no human need or should know the password: Only *authorized* applications should have access to the password. This means that we need to define which programs are authorized and which are not.
+
+![Confidential Configuration](configuration.png)
+
 
 We want to execute this program in a typical environment that is managed by a cloud provider. More concretely, we want to run this program as a process running in a container running in a pod, running in a Kubernetes node, running in a VM running on a server running in some data center. So there are multiple nested layers that one might need to be aware of. These days, we want to outsource the management of these layers to an external provider.
 

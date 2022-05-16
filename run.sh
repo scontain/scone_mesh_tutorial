@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 set -e  -x
 
@@ -10,7 +10,7 @@ then
 
     # ensure we have access to a new Rust installation
 
-    if ! command -v rustup /dev/null
+    if ! command -v rustup &> /dev/null
     then
         echo "No Rust found! Installing Rust!"
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
