@@ -70,6 +70,8 @@ Once you have created your manifest files, you only need to perform the followin
 
 ![3steps](steps.png)
 
+**Note**: Since the container **repository** and the **namespace** is under our control, you might want to change the image name to a repository to which you are permitted to push. Also, you might need to change the namespace.
+
 1. Build the service OCI container image (for each service):
 
 ```bash
