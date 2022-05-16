@@ -24,7 +24,7 @@ secrets:
     size: 10
 
 build:
-  name: python_hello_user
+  name: python-hello-user
   kind: python
   to: registry.scontain.com:5050/cicd/python_hello_user:latest
   pwd: /python

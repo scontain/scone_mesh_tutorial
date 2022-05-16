@@ -1,6 +1,8 @@
 # Confidential Hello World!
 
-We show how to provide cloud-native applications with secrets such that **nobody** except our program can access these secrets. In fact, not even users with root privileges and cloud providers with hardware access can access them.
+We show how to provide cloud-native applications with secrets such that **nobody** except our program can access these secrets. In fact, not even users with root privileges and cloud providers with hardware access can access them. We need to protect the data during runtime but also the secrets that we provision to the application:
+
+![Confidential Configuration](configuration.png)
 
 ## Hello World!
 
@@ -44,12 +46,18 @@ by both
 
 Using SCONE it is also possible to protect the code confidentiality so that nobody can view the program, but we do not include this feature in this example.
 
+![Confidential Secret Generation](generateSecrets.png)
+
 ## Create Manifest Files
 
 The first thing you need to do is to create the manifest files describing your services and how they should be connected in your application.
 The manifests are used to build confidential container images and to generate and upload the security policy for your confidential application. This is done in one **service manifest** file per service and one **mesh manifest** file (a.k.a. **Meshfile**), which is used to generate the security policies and global variables.
 
+![meshfile](meshfile.png)
+
 In this example, there is only one service and both its service and mesh manifest files have been created for you (`service.yml` and `mesh.yml`).
+
+![service](service.png)
 
 Note that you do not need a service manifest for **curated confidential service** like `memcached`, `nginx`, `MariaDB`, etc: the images already contain all required information. We show this in a different tutorial.
 
@@ -57,10 +65,12 @@ Note that you do not need a service manifest for **curated confidential service*
 
 Once you have created your manifest files, you only need to perform the following three steps to build and run your confidential application on Kubernetes:
 
+![3steps](steps.png)
+
 1. Build the service OCI container image (for each service):
 
 ```bash
-sconectl apply -f service.yml --no-push
+sconectl apply -f service.yml
 ```
 
 2. Build and upload the security policies for all services of the application using:
@@ -72,7 +82,7 @@ sconectl apply -f mesh.yml
 3. The second step generates a `helm` chart and you can start this application by executing:
 
 ```bash
-helm install pythonapp target/helm/charts/python_hello_user
+helm install pythonapp target/helm
 ```
 
 That's it! You can now inspect the output with `kubectl` (assuming you have  `kubectl` command completion installed):
@@ -211,7 +221,9 @@ cargo install sconectl
 
 ### Troubleshooting
 
-If this `cargo` would fail, ensure that
+**Note**: You can run script `run.sh` to set up / update your rust environment and to  install `sconectl` with the help of Rust. It will also execute the remaining steps of this tutorial.
+
+In case you install manually, errors might appear since Rust is not installed or out-of-date. If this `cargo` would fail, ensure that
 
 - you have `Rust` installed on your system. and 
 - it is up-to-date (you might get syntax errors if your Rust installation is old).
