@@ -70,7 +70,18 @@ Once you have created your manifest files, you only need to perform the followin
 
 ![3steps](steps.png)
 
-**Note**: Since the container **repository** and the **namespace** is under our control, you might want to change the image name to a repository to which you are permitted to push. Also, you might need to change the namespace.
+### Prerequisites
+
+In this example, the manifests use a container **repository** and a SCONE CAS **namespace** that is under our control. Hence,
+
+- We generate an image and we make this image available to your Kubernetes cluster. We therefore push this image to a repo. Change the image name (`to`, `image`) in the two manifests to a repository to which you are permitted to push.
+- You need to change the namespace (`namespace`) used in the `meshfile` manifest (see below),
+- You need to have `sconectl` installed (see below), and
+- You need a Kubernetes cluster with
+  - our [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) installed, and
+  - our [SCONE LAS](https://sconedocs.github.io/helm_las/) installed.
+
+### Commands
 
 1. Build the service OCI container image (for each service):
 
