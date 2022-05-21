@@ -78,23 +78,44 @@ Once you have created your manifest files, you only need to perform the followin
 sconectl apply -f service.yml
 ```
 
+
 2. Build and upload the security policies for all services of the application using:
 
 ```bash
 sconectl apply -f mesh.yml
 ```
 
-3. The second step generates a `helm` chart and you can start this application by executing:
+The locations of the artifacts are as follows:
+
+- container images are in one or more repos
+- the policies are stored in a SCONE CAS instance
+- the helm charts are stored in a local directory on the computer on which we execute `sconectl`.
+
+![locations](locations.png)
+
+1. The second step generates a `helm` chart and you can start this application by executing:
 
 ```bash
 helm install pythonapp target/helm
 ```
 
-That's it! You can now inspect the output with `kubectl` (assuming you have  `kubectl` command completion installed):
+![helm install](helm_install.png)
+
+That's it!
+
+You can now inspect the output with `kubectl` (assuming you have  `kubectl` command completion installed):
 
 ```bash
 kubectl logs pythonapp<TAB>
 ```
+
+Regarding the locations of the artifacts:
+
+- we typically use one repo near the Kubernetes cluster to store all images. We protect the access to this repo using a Kubernetes secret. Typically, we use a secret `sconeapps`,
+- the helm charts are located on a computer of the dev ops team, and
+- the the policies are stored in a SCONE CAS instance in the cluster.
+
+![typical locations of artifacts](typical_locations.png)
 
 But in case you are interested in what is going on under the hood, we explain the steps in some more details below.
 
