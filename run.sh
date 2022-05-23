@@ -48,7 +48,7 @@ sconectl apply -f service.yml
 #  - this fails if we have no access to the namespace
 #  - ensure to update the namespace to one that you control
 
-sconectl apply -f mesh.yml
+sconectl apply -vvvv -f mesh.yml
 
 # install application
 #  - this requires that kubectl gives access to you K8s cluster

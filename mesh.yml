@@ -8,7 +8,7 @@ cas:
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
 policy:
-  namespace: myPythonApp    # namespace on CAS instance `cas`
+  namespace: myPythonApp11   # namespace on CAS instance `cas`
 
 # define environment variables   
 env:
@@ -20,6 +20,18 @@ env:
     value: 443
   - name:  restartPolicy
     value: OnFailure
+  - name: useSGXDevPlugin # value chart
+    value: scone
+  - name: redis_initContainers_enabled
+    value: false
+  - name: redis_backend_server_name
+    value: redis
+  - name: redis_backend_server_port
+    value: 123
+  - name: redis_client_name # secrets
+    value: test
 services:
   - name: pythonapp
     image: registry.scontain.com:5050/cicd/python_hello_user:latest
+  - name: redis
+    image: registry.scontain.com:5050/cicd/redis:latest
