@@ -89,6 +89,7 @@ In this example, the manifests use a container **repository** and a SCONE CAS **
 sconectl apply -f service.yml
 ```
 
+If you do not have `sconectl` installed, please [`install sconectl`]().
 
 2. Build and upload the security policies for all services of the application using:
 

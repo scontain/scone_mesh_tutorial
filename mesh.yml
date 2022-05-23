@@ -8,7 +8,7 @@ cas:
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
 policy:
-  namespace: myPythonApp    # namespace on CAS instance `cas`
+  namespace: myPythonAppZ    # namespace on CAS instance `cas`
 
 # define environment variables   
 env:
@@ -18,8 +18,6 @@ env:
     value: sconeapps
   - name: APP_SERVICE_PORT
     value: 443
-  - name:  restartPolicy
-    value: OnFailure
 services:
   - name: pythonapp
     image: registry.scontain.com:5050/cicd/python_hello_user:latest
