@@ -11,23 +11,35 @@ environment:
       value: 760M
     - name: SCONE_LOG
       value: error
-    - name: API_PASSWORD
-      value: "$$SCONE::password$$"  # get from CAS
   global:     # values defined/overwritten in Meshfile
-    - name: API_USER  # get value from Meshfile
+    - name: REDIS_HOST  # get value from Meshfile
 
 # define secrets that are managed by CAS 
 secrets:
-  global: 
-  - name: password
-    kind: ascii
-    size: 10
+  import:
+    - redis_client_cert-key
+    - redis_ca_cert
+  global:
+    - name: api_ca_key
+      kind: private-key
+    - name: api_ca_cert
+      kind: x509-ca
+      private_key: api_ca_key
+    - name: flask_key
+      kind: private-key
+    - name: flask
+      kind: x509
+      private_key: flask_key
+      issuer: api_ca_cert
+      dns:
+        - api
 
 build:
   name: python-hello-user
   kind: python
   to: registry.scontain.com:5050/cicd/python_hello_user:latest
   pwd: /python
-  command: python3 print_env.py
+  requirements: requirments.txt
+  command: python3 api.py
   copy:
-    - print_env.py
+    - api.py
