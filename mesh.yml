@@ -13,7 +13,9 @@ policy:
 # define environment variables   
 env:
   - name: REDIS_HOST 
-    value: redis
+    value: pythonapp-redis-scone
+  - name: redis_server_name
+    value: pythonapp-redis-scone
   - name: imagePullSecrets
     value: sconeapps
   - name: APP_SERVICE_PORT
@@ -24,6 +26,12 @@ env:
     value: scone
   - name: redis_client_name # secrets
     value: test
+  - name: api_host
+    value: "flask-api-scone"
+  - name: CLUSTER_DNS_IP
+    value: "10.96.0.10"
+  - name: K8sNAMESPACE
+    value: "default"
 services:
   - name: pythonapp
     image: registry.scontain.com:5050/cicd/python_hello_user:latest
