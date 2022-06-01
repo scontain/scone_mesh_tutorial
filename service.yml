@@ -72,6 +72,7 @@ build:
   to: registry.scontain.com:5050/cicd/python_hello_user:latest
   pwd: /python
   requirements: requirments.txt
-  command: python3 api.py
+  # command: python3 -c 'print("hw")'
+  command: python3 /python/api.py
   copy:
     - api.py

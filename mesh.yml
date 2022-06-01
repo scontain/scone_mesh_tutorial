@@ -8,7 +8,7 @@ cas:
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
 policy:
-  namespace: myPythonApp20   # namespace on CAS instance `cas`
+  namespace: myPythonApp21   # namespace on CAS instance `cas`
 
 # define environment variables   
 env:

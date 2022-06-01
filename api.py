@@ -1,3 +1,4 @@
+print("importing")
 from flask import Flask, request, jsonify, Response
 from flask_restful import Resource, Api
 import json
@@ -24,7 +25,9 @@ db = redis.StrictRedis(
    ssl_ca_certs='/tls/redis-ca.crt')
 
 # Test connection to redis (break if the connection fails).
+print("Checking connection to DB ")
 db.info()
+print("Connection to DB is fine")
 
 
 class Client(Resource):
@@ -114,6 +117,6 @@ api.add_resource(DumpMemory, '/memory')
 
 
 if __name__ == '__main__':
-    app.debug = False
+    app.debug = True
     print("Starting Flask...")
     app.run(host='0.0.0.0', port=4996, threaded=True, ssl_context=(("/tls/flask.crt", "/tls/flask.key")))

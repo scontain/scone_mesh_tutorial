@@ -42,13 +42,13 @@ docker pull registry.scontain.com:5050/cicd/sconecli:latest 2> /dev/null || {
 # build service image
 #  - if the push fails, add --no-push or change the TO field
  
-sconectl apply -f service.yml 
+sconectl apply -vvvv -f service.yml &> service.log
 
 # build application - push policies
 #  - this fails if we have no access to the namespace
 #  - ensure to update the namespace to one that you control
 
-sconectl apply -vvvv -f mesh.yml
+sconectl apply -vvvv -f mesh.yml &> mesh.log
 
 # install application
 #  - this requires that kubectl gives access to you K8s cluster
