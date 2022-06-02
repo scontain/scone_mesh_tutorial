@@ -27,7 +27,7 @@ env:
   - name: useSGXDevPlugin # value chart
     value: scone
   - name: redis_client_name # secrets
-    value: test
+    value: pythonapp-python-hello-user
   - name: api_host
     value: "pythonapp-python-hello-user"
   - name: CLUSTER_DNS_IP
