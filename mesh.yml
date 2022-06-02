@@ -29,7 +29,7 @@ env:
   - name: redis_client_name # secrets
     value: test
   - name: api_host
-    value: "flask-api-scone"
+    value: "pythonapp-python-hello-user"
   - name: CLUSTER_DNS_IP
     value: "10.96.0.10"
   - name: K8sNAMESPACE

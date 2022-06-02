@@ -22,6 +22,7 @@ environment:
   global:     # values defined/overwritten in Meshfile
     - name: REDIS_HOST  # get value from Meshfile
     - name: REDIS_PORT  # get value from Meshfile
+    - name: api_host
 
 injection_files:
   - path: /tls/client.crt
