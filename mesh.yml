@@ -8,18 +8,20 @@ cas:
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
 policy:
-  namespace: myPythonApp21   # namespace on CAS instance `cas`
+  namespace: myPythonApp22   # namespace on CAS instance `cas`
 
 # define environment variables   
 env:
   - name: REDIS_HOST 
     value: pythonapp-redis-scone
+  - name: REDIS_PORT 
+    value: 6379
   - name: redis_server_name
     value: pythonapp-redis-scone
   - name: imagePullSecrets
     value: sconeapps
   - name: APP_SERVICE_PORT
-    value: 443
+    value: 4996
   - name:  restartPolicy
     value: OnFailure
   - name: useSGXDevPlugin # value chart

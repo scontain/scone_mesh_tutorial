@@ -1,4 +1,3 @@
-print("importing")
 from flask import Flask, request, jsonify, Response
 from flask_restful import Resource, Api
 import json
@@ -6,6 +5,9 @@ import os
 import random
 import redis
 import sys, os, re
+import time
+import socket
+
 from schwifty import IBAN
 
 app = Flask(__name__)
@@ -15,6 +17,8 @@ api = Api(app)
 # Setup redis instance.
 REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
 REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+print("Connecting to DB ", REDIS_HOST, REDIS_PORT, flush=True)
+
 db = redis.StrictRedis(
    host=REDIS_HOST,
    port=REDIS_PORT,
@@ -25,9 +29,11 @@ db = redis.StrictRedis(
    ssl_ca_certs='/tls/redis-ca.crt')
 
 # Test connection to redis (break if the connection fails).
-print("Checking connection to DB ")
-db.info()
-print("Connection to DB is fine")
+time.sleep(5)
+data = socket.gethostbyname_ex(REDIS_HOST)
+print ("\n\nThe IP Address of redis host is: "+repr(data))  
+#db.info()
+print("Connection to DB is fine (TODO: uncomment db.info and remove this)", flush=True)
 
 
 class Client(Resource):
@@ -118,5 +124,5 @@ api.add_resource(DumpMemory, '/memory')
 
 if __name__ == '__main__':
     app.debug = True
-    print("Starting Flask...")
-    app.run(host='0.0.0.0', port=4996, threaded=True, ssl_context=(("/tls/flask.crt", "/tls/flask.key")))
+    print("Starting Flask...", flush=True)
+    app.run(host='0.0.0.0', port=4996, use_reloader=False, threaded=True, ssl_context=(("/tls/flask.crt", "/tls/flask.key")))

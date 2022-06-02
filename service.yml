@@ -13,8 +13,15 @@ environment:
       value: 760M
     - name: SCONE_LOG
       value: debug
+    - name: INIT_CONTAINER1_ENABLE
+      value: "false"
+    - name: INIT_CONTAINER1
+      value: "{{REDIS_HOST}}"
+    - name: INIT_CONTAINER1_PORT
+      value: "{{REDIS_PORT}}"
   global:     # values defined/overwritten in Meshfile
     - name: REDIS_HOST  # get value from Meshfile
+    - name: REDIS_PORT  # get value from Meshfile
 
 injection_files:
   - path: /tls/client.crt
@@ -24,7 +31,7 @@ injection_files:
   - path: /tls/redis-ca.crt
     content: $$SCONE::redis_ca_cert.chain$$
   - path: /tls/flask.crt
-    content: $$SCONE::flask.chain$$
+    content: $$SCONE::flask.crt$$
   - path: /tls/flask.key
     content: $$SCONE::flask.key$$
 # Network files
