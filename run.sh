@@ -56,4 +56,4 @@ sconectl apply -vvvv -f mesh.yml &> mesh.log
 
 helm uninstall pythonapp 2> /dev/null || true 
 
-# helm install pythonapp target/helm/
+helm install pythonapp target/helm/
