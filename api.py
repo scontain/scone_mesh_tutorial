@@ -31,10 +31,9 @@ db = redis.StrictRedis(
 # Test connection to redis (break if the connection fails).
 time.sleep(5)
 data = socket.gethostbyname_ex(REDIS_HOST)
-print ("\n\nThe IP Address of redis host is: "+repr(data))  
-#db.info()
-print("Connection to DB is fine (TODO: uncomment db.info and remove this)", flush=True)
-
+print ("The IP Address of redis host is: "+repr(data))  
+db.info()
+print("Connection to DB is fine", flush=True)
 
 class Client(Resource):
     def get(self, client_id):
