@@ -7,6 +7,8 @@ BLUE='\e[34m'
 ORANGE='\e[33m'
 NC='\e[0m' # No Color
 
+RELEASE="pythonapp"
+
 # print an error message on an error exiting
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
@@ -79,14 +81,14 @@ echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique n
 
 sconectl apply -f mesh.yml
 
-echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall pythonapp"
+echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${RELEASE}"
 echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
 
-helm uninstall pythonapp 2> /dev/null || true 
+helm uninstall ${RELEASE} 2> /dev/null || true 
 
-echo -e "${BLUE}install application:${NC} helm install pythonapp target/helm/"
+echo -e "${BLUE}install application:${NC} helm install ${RELEASE} target/helm/"
 
-helm install pythonapp target/helm/
+helm install ${RELEASE} target/helm/
 
-echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs pythonapp<TAB>"
-echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall pythonapp"
+echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${RELEASE}<TAB>"
+echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE}"
