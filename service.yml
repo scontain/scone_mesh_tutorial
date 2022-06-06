@@ -31,3 +31,10 @@ build:
   command: python3 print_env.py
   copy:
     - print_env.py
+  run:
+    - > 
+     echo "You can also RUN additional commands in the same way as docker build RUN commands"
+     && echo "If you use multi-line commands, please do not forget to start lines with &&."
+     && echo "A multi-line command like this will be added as a single line. No need for \\"
+    - echo "Or use single line command"
+    - echo "Each command is executed by a single RUN command"
