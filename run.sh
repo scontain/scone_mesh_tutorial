@@ -67,19 +67,19 @@ echo -e "${BLUE}let's ensure that we build everything from scratch${NC}"
 rm -rf target
 
 
-echo -e  "${BLUE}build service image:${NC} apply -f service.yml"
+echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"
 echo -e  "${BLUE} - if the push fails, add --no-push to avoid pusing the image, or${NC}"
-echo -e  "${BLUE}   change in file '${ORANGE}service.yml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo you have permission to push to.${NC}"
+echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo you have permission to push to.${NC}"
 
  
-sconectl apply -f service.yml
+sconectl apply -f service.yaml
 
 
-echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yml"
+echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
 echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"
-echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique name in '${ORANGE}mesh.yml${NC}'"
+echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique name in '${ORANGE}mesh.yaml${NC}'"
 
-sconectl apply -f mesh.yml
+sconectl apply -f mesh.yaml
 
 echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${RELEASE}"
 echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"

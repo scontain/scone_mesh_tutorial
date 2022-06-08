@@ -58,7 +58,7 @@ The manifests are used to build confidential container images and to generate an
 
 ![meshfile](meshfile.png)
 
-In this example, there is only one service and both its service and mesh manifest files have been created for you (`service.yml` and `mesh.yml`).
+In this example, there is only one service and both its service and mesh manifest files have been created for you (`service.yaml` and `mesh.yaml`).
 
 ![service](service.png)
 
@@ -86,7 +86,7 @@ In this example, the manifests use a container **repository** and a SCONE CAS **
 1. Build the service OCI container image (for each service):
 
 ```bash
-sconectl apply -f service.yml
+sconectl apply -f service.yaml
 ```
 
 If you do not have `sconectl` installed, please [`install sconectl`]().
@@ -94,7 +94,7 @@ If you do not have `sconectl` installed, please [`install sconectl`]().
 2. Build and upload the security policies for all services of the application using:
 
 ```bash
-sconectl apply -f mesh.yml
+sconectl apply -f mesh.yaml
 ```
 
 The locations of the artifacts are as follows:
@@ -273,13 +273,13 @@ If Rust is not yet installed or too old, you can use [`rustup`](https://www.rust
 Depending what Manifest you apply, different command line options might be available. To get a list of options, for a given manifest, you can execute:
 
 ```bash
-sconectl apply -f service.yml --help
+sconectl apply -f service.yaml --help
 ```
 
 You can print which environment variables you can define and also their default values by executing:
 
 ```bash
-sconectl apply -f service.yml -p
+sconectl apply -f service.yaml -p
 ```
 
 ### Building a Service Image
@@ -287,7 +287,7 @@ sconectl apply -f service.yml -p
 We can now apply a manifest as follows (and we do not want to push to the repo just yet):
 
 ```bash
-sconectl apply -f service.yml --no-push
+sconectl apply -f service.yaml --no-push
 ```
 
 ### Displaying Environment Variables
@@ -295,5 +295,5 @@ sconectl apply -f service.yml --no-push
 We can show which variables must be defined in a `meshfile` using option `-p`:
 
 ```bash
-sconectl apply -f mesh.yml -p
+sconectl apply -f mesh.yaml -p
 ```
