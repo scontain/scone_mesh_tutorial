@@ -39,6 +39,18 @@ then
     exit 1
 fi
 
+if ! command -v helm &> /dev/null
+then
+    echo -e "${RED}No helm found! You need to install helm. EXITING.${NC}"
+    exit 1
+fi
+
+if ! command -v kubectl &> /dev/null
+then
+    echo -e "${RED}No kubectl found! You need to install kubectl. EXITING.${NC}"
+    exit 1
+fi
+
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
 docker pull registry.scontain.com:5050/cicd/sconecli:latest 2> /dev/null || { 

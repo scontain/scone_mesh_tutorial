@@ -1,149 +1,608 @@
 # Confidential Hello World!
 
-We show how to provide cloud-native applications with secrets such that **nobody** except our program can access these secrets. In fact, not even users with root privileges and cloud providers with hardware access can access them. We need to protect the data during runtime but also the secrets that we provision to the application:
+In this tutorial we show how to provide a simple cloud-native application with 
+a secret such that **nobody** (except our program) can access the secret. 
+In fact, not even users with root privileges and cloud providers with hardware 
+access can access it or modify the program. 
 
-![Objectives](objective.png)
+> **NOTE:** If you want to skip the introductory explanations, 
+> you can jump right to the [**Quick Start Guide**](#quick-start-guide). 
 
-## Hello World!
+> **NOTE:** We also have 
+> [other tutorials](https://sconedocs.github.io/workflows/) 
+> which you can check out at our SCONE documentation website.
 
-We start with a simple *Hello World* example, in which we pass a user ID and a password to a Python program. This is actually an API user and password, i.e., no human need or should know the password: Only *authorized* applications should have access to the password. This means that we need to define which programs are authorized and which are not.
+> **NOTE:** In case you are having problems, you can consult 
+> [our troubleshooting guide](#troubleshooting).
 
-![Confidential Configuration](configuration.png)
+### Motivation and Use Case Description
 
+In our simple Hello World example, we pass a user ID and a password to a 
+Python program. This is actually an API user and password, i.e., no human 
+neither needs to nor should know the password. In fact, only *authorized* 
+applications has access to the password.
 
-We want to execute this program in a typical environment that is managed by a cloud provider. More concretely, we want to run this program as a process running in a container running in a pod, running in a Kubernetes node, running in a VM running on a server running in some data center. So there are multiple nested layers that one might need to be aware of. These days, we want to outsource the management of these layers to an external provider.
+We want to execute this program in a typical environment that is managed by a 
+cloud provider. More concretely, we want to run this program as a process running 
+in a container running in a Kubernetes pod, running on a Kubernetes node, running 
+in a VM running on a server running in some data center. 
+So there are multiple nested layers that one might need to be aware of. 
+These days, one often outsources the management of these layers to an external 
+cloud provider.
 
-The cloud provider operates the hardware, the cloud stack, the operating system, and Kubernetes. What we need to ensure is that nobody (except our program) can change read our password (we ensure confidentiality) nor can change the user ID.
+The cloud provider operates the hardware, the cloud stack, the operating system, 
+and Kubernetes. 
+Relying on the cloud provider to do all this decreases the complexity of running 
+a cloud application for us, but it usually also forces us to give a lot of power 
+and trust to the cloud provider. 
+SCONE however, allows us not to have to trust and give this power to neither the 
+cloud provider nor malicious root users. 
 
-Neither cloud provider nor system admins will be able to see the parameters or change the program.
-
-This program could look as follows:
-
-```python
-import os
-
-# Get some environment variables
-API_USER = os.getenv('API_USER')
-API_PASSWORD = os.environ.get('API_PASSWORD')
-
-# Exit with error if one is not defined
-if API_USER == None or API_PASSWORD == None:
-    print("Not all required environment variables are defined!")
-    exit(1)
-
-# Print API_USER - this is - unlike the API_PASSWORD - not confidential
-print(f"Hello '{API_USER}' - we protect the confidentiality of API_PASSWORD")
-```
+Using SCONE, despite not having full 
+control of neither the hardware nor the software setup, we can ensure that nobody 
+(except our program) can change or read our password or can change the user ID or 
+other parts of the program. We also ensure that we always run the desired version 
+of our program.
 
 ## Objectives
 
-Our objective is that it must be impossible both:
+The desired level of protection is a **design choice** made by the 
+application owner. If this choice changes, the program does not need to be changed.
 
-1. to view and modify the password, and
-2. to modify the program
+Our objectives in this tutorial are to provide:
 
-by both  
+1. confidentiality, integrity and consistency protection of our secret,
+2. integrity and consistency protection of the program and user ID. 
 
-1. a system admin or any other user with root access, and
-2. a cloud provider or anybody else with physical access to the hardware.
+> **NOTE:** *Confidentiality protected* means that the protected resource 
+> cannot be read by entities not authorized by the security policy of the 
+> application.
 
-Using SCONE it is also possible to protect the code confidentiality so that nobody can view the program, but we do not include this feature in this example.
+> **NOTE:** *Integrity protected* means that the protected resource 
+> cannot be modified by entities not authorized by the security policy of the 
+> application.
 
-![Confidential Secret Generation](generateSecrets.png)
+> **NOTE:** *Consistency protected* means that the version of the protected 
+> resource cannot be changed, unless a software update is authorized by the 
+> application owner. How this is done is shown in a 
+> [different tutorial](missing link).
 
-## Create Manifest Files
+This means we in this tutorial choose to let the program and the user ID to be 
+readable but not changeable, and the password to be neither. 
+These properties hold even for people with **root access** and/or **physical access** 
+to the hardware.
 
-The first thing you need to do is to create the manifest files describing your services and how they should be connected in your application.
-The manifests are used to build confidential container images and to generate and upload the security policy for your confidential application. This is done in one **service manifest** file per service and one **mesh manifest** file (a.k.a. **Meshfile**), which is used to generate the security policies and global variables.
+> **NOTE:** Using SCONE it is also possible to protect the confidentiality of 
+> the code so that nobody can view the program, but we do not include this 
+> feature in this example.
 
-![meshfile](meshfile.png)
+## Quick Start Guide
 
-In this example, there is only one service and both its service and mesh manifest files have been created for you (`service.yml` and `mesh.yml`).
+### Step 0: Requirements
 
-![service](service.png)
-
-Note that you do not need a service manifest for **curated confidential service** like `memcached`, `nginx`, `MariaDB`, etc: the images already contain all required information. We show this in a different tutorial.
-
-## Quick Start
-
-Once you have created your manifest files, you only need to perform the following three steps to build and run your confidential application on Kubernetes:
-
-![3steps](steps.png)
-
-### Prerequisites
-
-In this example, the manifests use a container **repository** and a SCONE CAS **namespace** that is under our control. Hence,
-
-- We generate an image and we make this image available to your Kubernetes cluster. We therefore push this image to a repo. Change the image name (`to`, `image`) in the two manifests to a repository to which you are permitted to push.
-- You need to change the namespace (`namespace`) used in the `meshfile` manifest (see below),
-- You need to have `sconectl` installed (see below), and
-- You need a Kubernetes cluster with
-  - our [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) installed, and
-  - our [SCONE LAS](https://sconedocs.github.io/helm_las/) installed.
-
-### Commands
-
-1. Build the service OCI container image (for each service):
+Many development system will already have most of the necessary
+software installed. We provide a `bash` shell script to verify this,
+and install what is missing. Run:
 
 ```bash
-sconectl apply -f service.yml
+check_prerequisites.sh
 ```
 
-If you do not have `sconectl` installed, please [`install sconectl`]().
+to automatically perform the following actions:
 
-2. Build and upload the security policies for all services of the application using:
+1. Update and/or [install rust and cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html). 
+2. Install the SCONE command line tool `sconectl`, if not already present. 
+3. Check whether [docker](https://docs.docker.com/get-docker/), 
+[helm](https://helm.sh/docs/intro/install/) and 
+[kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) are installed.
+4. Check whether you have access rights to the SCONE docker image 
+`registry.scontain.com:5050/cicd/sconecli:latest`.
+   - If this fails, check the [troubleshooting section](#not-allowed-to-pull-from-scone-registry) 
+   on what to do.
+
+> **NOTE:** In case rust or cargo are missing, `check_prerequisites.sh` 
+> installs them, which relies on `curl` being installed on your system. 
+
+> **NOTE:** Alternatively to using the `check_prerequisites.sh` 
+> script, you can install `sconectl` manually by executing 
+> `cargo install sconectl`.
+
+> **NOTE:** For information on how to use `sconectl`, run `sconectl --help`
+
+Apart from installing the software handled by the check_prerequisites.sh` script, 
+you also need:
+
+- Read and write access to a container registry, where you want to store 
+your container image with the Hello World service.
+- Access to a [Kubernetes](https://kubernetes.io) cluster, 
+to which you want to deploy your Hello World application.
+  - On this cluster, you need to install: 
+    - the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
+      service:
+        - `helm install sgxdevplugin sconeapps/sgxdevplugin`
+    - the [SCONE LAS](https://sconedocs.github.io/helm_las/) 
+      service:
+        - `helm install las sconeapps/las`
+
+### Step 1: Write the Services of Your Application
+
+Our Hello World program looks like follows and is available in `print_env.py`: 
+
+```python
+import os
+import time
+import hashlib
+
+# Get the environment variables. 
+# The value of API_USER is set in the meshfile and therefore 
+# visible to the sysadmin of the application owner.
+API_USER = os.environ.get('API_USER', None)
+# The value of API_PASSWORD is generated by CAS and therefore 
+# not visible even to the sysadmin of the application owner.
+API_PASSWORD = os.environ.get('API_PASSWORD', None)
+
+# Exit with error if either one is not defined in service.yml.
+if API_USER is None or API_PASSWORD is None:
+    print("Not all required environment variables are defined!")
+    exit(1)
+
+# We can print API_USER, since it, unlike the API_PASSWORD, is not 
+# meant to be confidential.
+print(f"Hello '{API_USER}' - thanks for passing along the API_PASSWORD", 
+      flush=True)
+
+# We print a checksum of API_PASSWORD, since we want to see
+# if and when it changes. 
+pw_checksum = hashlib.md5(API_PASSWORD.encode('utf-8')).hexdigest()
+print(f"The checksum of API_PASSWORD is '{pw_checksum}'")
+
+while True:
+  print("Stop me by executing 'helm uninstall pythonapp'", flush=True)
+  time.sleep(10)
+```
+
+### Step 2: Create the Manifest Files
+
+In general, you need to create one so-called *service manifest file* per service 
+and one so-called *mesh manifest file* (a.k.a. *meshfile*) for your application. 
+In this Hello World example this amounts to just two files, which
+have already been created for you. You just need to:
+
+1. Change the `build.to` tag in the provided `service.yml` file to point to 
+the repository and image name and tag, to which you want to upload the generated 
+container image containing the service.
+2. Change the `services.image` tag in the `mesh.yml` file to point to the same 
+image, which you chose to use in the `service.yml` file in the previous step.
+3. Change the `policy.namespace` tag in the `mesh.yml` file to a unique 
+[SCONE CAS namespace](https://sconedocs.github.io/namespace/) of your choice. 
+
+> **NOTE:** A service manifest file is a `yaml` file, in which you describe the 
+service by specifying different properties. These include but are not limited to:
+> - Secrets the service imports and exports. 
+>    - A secret can be exported either 
+>      - to all other services, 
+>      - to a specific service or 
+>      - to all services in a CAS namespace.
+> - The container image and repository to be used to run the service
+> - Environment variables
+>   - local environment variables are kept confidential, i.e., 
+>   they are only visible to the service itself.
+>   - global environment variables are visible to all services in a mesh.
+> - Arguments
+
+> **NOTE:** The mesh manifest file of an application is a `yaml` file, in which
+> you describe the application by specifying different properties. These include
+> but are not limited to:
+> - Global variables
+> - Services and their images
+> - [SCONE CAS](https://sconedocs.github.io/public-CAS/) instance and namespace. 
+>   - The SCONE CAS instance can be either public or private and potentially run 
+> inside the Kubernetes cluster.
+
+### Step 3: Build and Deploy Your Application
+
+Once you have created your manifest files, you only need to run:
 
 ```bash
-sconectl apply -f mesh.yml
+run.sh
 ```
+to build and run your confidential application on Kubernetes.
 
-The locations of the artifacts are as follows:
+> **NOTE:** Under the hood `run.sh` executes the following three commands:
+> 1. Build the OCI container images containing your services and push it to your 
+> repository by executing the following command (once per service):
+>
+>   ```bash
+>   sconectl apply -f service.yml
+>   ```
+> 2. Build the application mesh: 
+>   ```bash
+>   sconectl apply -f mesh.yml
+>   ```
+>   Building the application mesh will
+>     - connect the services together and generate a helm chart into `target/helm` 
+>   in the current directory on your local machine.
+>     - generate the security policies and global variables and upload them to the 
+>   SCONE CAS instance specified in the `mesh.yml` file.
+> 3. Deploy the application using the generated helm chart:
+>   ```bash
+>   helm install pythonapp target/helm
+>   ```
 
-- container images are in one or more repos
-- the policies are stored in a SCONE CAS instance
-- the helm charts are stored in a local directory on the computer on which we execute `sconectl`.
+> **NOTE:** `run.sh` also calls ``check_prerequisites.sh`and thus install
+> any missing requirements (see [Step 0](#step-0-requirements)).
 
-![locations](locations.png)
+**Congratulations! You made it!** You now have the confidential 
+Hello World application running on your Kubernetes cluster. 
+In the next step we will show you how you can verify that the 
+password, user ID and program indeed are protected according to 
+our [objectives](#objectives).
 
-1. The second step generates a `helm` chart and you can start this application by executing:
+### Step 4: Ensure the Desired Protection
 
-```bash
-helm install pythonapp target/helm
-```
+In the section [Objectives](#objectives) we stated how we wanted
+to protect our data and program in this tutorial. In this section 
+we will show you how to ensure that these objectives, one by one. 
+But first we will ensure that the application is functioning as desired.
 
-![helm install](helm_install.png)
+#### Ensure the functionality
 
-That's it!
-
-You can now inspect the output with `kubectl` (assuming you have  `kubectl` command completion installed):
+Assuming you have `kubectl` command line completion installed and your kubeconfig
+set-up correctly, you can look at the log of the pod of
+your service by executing the following command:
 
 ```bash
 kubectl logs pythonapp<TAB>
 ```
 
-Regarding the locations of the artifacts:
+This should show the following output:
 
-- we typically use one repo near the Kubernetes cluster to store all images. We protect the access to this repo using a Kubernetes secret. Typically, we use a secret `sconeapps`,
-- the helm charts are located on a computer of the dev ops team, and
-- the the policies are stored in a SCONE CAS instance in the cluster.
+```
+Hello 'myself' - thanks for passing along the API_PASSWORD
+The checksum of API_PASSWORD is '...'
+Stop me by executing 'helm uninstall pythonapp'
+Stop me by executing 'helm uninstall pythonapp'
+Stop me by executing 'helm uninstall pythonapp'
+...
+```
 
-![typical locations of artifacts](typical_locations.png)
+#### Ensure Confidentiality Protection
 
-But in case you are interested in what is going on under the hood, we explain the steps in some more details below.
+Our objective in this tutorial was to ensure the confidentiality of our 
+secret password stored in the environment variable `API_PASSWORD`,
+whereas both the program and the username stored in 
+`API_USER` were allowed to be visible.
 
-### Notes
+Log in to the container running the Hello World service by executing: 
 
-- In some deployments, new images might be automatically deployed. If this is the case, ensure that the container images that are generated in step 1. are not deployed automatically by adding option `--no-push`.
-- Container images are only permitted to deployed after the security policies are created or updated in step 2. Ensure that the images are only deployed after step 2.
-- For example, you might push the images only after step 2 to the cluster.
+```bash
+kubectl exec -it pythonapp-<TAB> -- bash
+```
+This will take you to the command line prompt inside the container.
 
-## Building a Confidential Image
+1. Check to make sure you can **_not_** read the value of the password 
+environment variable:
 
-Our objective is to build a confidential container image to run this application in an encrypted memory region (aka enclave) and ensure that environment variables are securely passed to the application only after the application was attested and verified. Otherwise, one could, by changing the arguments passed to a Python engine, run completely different functionality.
+   ```bash
+   echo $API_PASSWORD
+   ``` 
+
+2. Check to make sure you can read the username:
+
+   ```bash
+   echo $API_USER`
+   ```
+   
+   The output should be `myself`.
+
+3. Check to make sure you can read the program:
+
+   ```bash
+   # find the program inside the container by looking for a unique substring
+   grep -re "thanks for passing along" /
+   # view the content of the file you found
+   cat <program file>
+   ```
+   The output should be the same program you wrote 
+in [Step 1](#step-1-write-the-services-of-your-application) 
+of this tutorial, i.e. the content of `print_env.py` 
+in the repository.
+
+#### Ensure Integrity Protection
+
+Our objective in this tutorial was to ensure the integrity of our program 
+as well as our username and confidential password that are stored in the 
+environment variables `API_USER` and `API_PASSWORD`, respectively.
+
+1. Check the integrity of the secret password by trying to modify the 
+environment variable `API_PASSWORD`:
+   
+   ```bash
+   # Set the API_PASSWORD environment variable
+   export API_PASSWORD="MY NEW INCORRECT PASSWORD"
+   # View the API_PASSWORD environment variable
+   echo $API_PASSWORD
+   ```
+   
+   Both commands should fail.
+2. Check the integrity protection of the username environment variable by
+trying to modify it:
+   
+   ```bash
+   # Set the API_USER environment variable
+   export API_USER="MY NEW INCORRECT PASSWORD"
+   # View the API_USER environment variable
+   echo $API_USER
+   ```
+   
+   Both commands should fail.
+3. Check the integrity protection of the program: 
+   1. Find the program file: 
+
+      ```bash
+      grep -re "thanks for passing along" /
+      ```
+      
+   2. Edit the program file. Any change made to the file should make the 
+   attestation fail, and the program should fail to run. 
+   3. Verify that the edited program fails to run by checking its logs:
+   
+      ```bash
+      # Exit the container
+      exit
+      # Check the logs 
+      kubectl logs pythonapp<TAB>
+      ```
+
+#### Ensure Consistency Protection
+
+Our objective in this tutorial was to ensure the consistency of our program, 
+username and password. This means that we need to show that, 
+as soon as the process of the service starts up, 
+we detect if somebody tried to revert to an older version of the application. 
+
+To simulate an attack on the consistency protection of one of the three 
+resources, i.e., username, password or program code,
+we first deploy the application with a new version of the resource, 
+and then maliciously try and deploy the  
+application with the old version of the resource.
+
+> **NOTE:** Changing the values of the username, password and/or program 
+> in any other way than running an unintended, previously valid, version
+> is prevented by the integrity protection, as opposed to the consistency 
+> protection.
+
+> **NOTE:** It out of scope of this tutorial to show why a malicious user, 
+> authorized as the system administrator of the CAS 
+> (as opposed to the system administrator of the application owner), 
+> will also fail in attacking the consistency protection.
+
+1. To verify the consistency protection of the **password**, 
+we would have to create and deploy a new version of the application, 
+i.e., version 2, which only differs from version 1 in its password.
+The malicious attack would try to revert to use the password of version 1.
+
+   Since the password needs to be confidential, 
+even to the sysadmin of the application owner, it is generated by CAS. 
+
+   > **NOTE:** CAS does not regenerate the password 
+   > with each new version of the application. 
+   > To trigger the regeneration of the password in a new application 
+   > version, we need to change the way we want it generated, for example 
+   > by changing the length of the password.
+
+   However, as soon as the password is regenerated to be used in version 2, 
+the old password is no longer present, neither in CAS nor anywhere else, 
+and we therefore have nothing to which we can revert. 
+But let us anyway assume that the attacker in some 
+way had indeed become a copy of the version 1 password, they would have to 
+upload it to CAS, in order for it to be the correct password. 
+As soon as the upload to CAS has taken place, however,
+this is considered to be a new, authorized version, i.e., version 3. 
+
+   Hence, since we didn't succeed in reverting to the password of version 1 
+without the change being detected, 
+the attack on the consistency protection of the password failed.
+
+2. To verify the consistency protection of the **username**, 
+we would have to create and deploy a new version of the application, 
+i.e., version 2, which only differs from version 1 in its username.
+The malicious attack would try to revert to use the username of version 1.
+
+   The value of the username is specified in `mesh.yml` and needs to be 
+uploaded to CAS for it to be considered to be the correct username. 
+To revert to the username of version 1, the attacker would thus have to 
+upload it to CAS.
+As soon as the upload to CAS has taken place, however,
+this is considered to be a new, authorized version, i.e., version 3. 
+
+   Hence, since we didn't succeed in reverting to the username of version 1 
+without the change being detected, 
+the attack on the consistency protection of the username failed.
+
+**************3. To verify the consistency protection of the **password**, 
+we will create a new version of the application, 
+i.e., version 2, which only differs from version 1 in its password.  
+
+   1. Remember the checksum of the password written in the logs of the
+   currently deployed version (i.e., version 1) of the application:
+   
+      ```bash
+      kubectl logs pythonapp<TAB>
+      ```
+      
+   2. Create a new version, i.e., version 2, of the password by changing the 
+   size of the password in `service.yml`, for example to 11:
+   
+      ```bash
+      ...
+      secrets:
+        global:
+        - name: password
+          kind: ascii
+          size: 11
+      ...
+      ```
+   
+   3. Change the image tag in `service.yml` under `build.to` to `2`.
+   4. Change the image tag in `mesh.yml` under `services.image` to `2`.
+   5. Deploy the new version, i.e., version 2, of the application:
+   
+      ```bash
+      run.sh
+      ```
+
+   6. Verify that the second version of the application is running, 
+   by making sure the checksum of the password is different from before:
+
+      ```bash
+      kubectl logs pythonapp<TAB>
+      ```
+
+   7. Push the image of version 1 to the registry under the tag `2`: 
+   
+      ```bash
+      docker tag <image registry>.<image name>:1 <image registry>.<image name>:2
+      docker push <image registry>.<image name>:2
+      ```
+
+   8. Deploy the fake version 2.
+   9. Verify that program fails:
+
+      ```bash
+      kubectl logs pythonapp<TAB>
+      ```
+   10. Fix the application by overwriting the fake version 2 image with the 
+   correct version 2:
+
+      ```bash
+      run.sh
+      ```
+
+   11. To verify the consistency protection of the **username**, we will create a 
+new version of the application, i.e., version 3, which only differs from 
+version 2 in its username.  
+
+       1. Create a third version, i.e., version 3, of the username by changing the 
+       value of API_USER in `mesh.yml`:
+   
+          ```bash
+          ...
+          env:
+            - name: API_USER
+              value: myNEWself
+          ...
+          ```
+   
+       2. Change the image tag in `service.yml` under `build.to` to `3`.
+       3. Change the image tag in `mesh.yml` under `services.image` to `3`.
+       4. Deploy the new version, i.e., version 3, of the application:
+   
+          ```bash
+          run.sh
+          ```
+
+       5. Verify that the third version of the application is running, 
+       by making sure `Hello 'myNEWself'` is printed in the logs:
+
+          ```bash
+          kubectl logs pythonapp<TAB>
+          ```
+
+       6. Push the image of version 2 to the registry under the tag `3`: 
+   
+          ```bash
+          docker tag <image registry>.<image name>:2 <image registry>.<image name>:3
+          docker push <image registry>.<image name>:3
+          ```
+
+       7. Deploy the fake version 3.
+       8. Verify that program fails:
+
+          ```bash
+          kubectl logs pythonapp<TAB>
+          ```
+       9. Fix the application by overwriting the image with the correct version 3:
+
+          ```bash
+          run.sh
+          ```**************
+
+1. To verify the consistency protection of the **program**, 
+we would have to create and deploy a new version of the application, 
+i.e., version 2, which differs from version 1 in its program code.
+The malicious attack would try to revert to use the program code of version 1:
+
+   1. Build and deploy version 2: 
+      1. Create a new version, i.e., version 2, of the program from 
+      [Step 1](#step-1-write-the-services-of-your-application) by adding
+      the following line to `print_env.py`:
+   
+         ```python
+         ...
+         print(f"This new version of the program also prints this line.", flush=True)
+         ...
+         ```
+   
+      2. Change the image tag in `service.yml` under `build.to` to `2`.
+      3. Change the image tag in `mesh.yml` under `services.image` to `2`.
+      4. Deploy the new version, version 2, of the application:
+   
+         ```bash
+         run.sh
+         ```
+
+      5. Verify that version 2 is running, 
+         by making sure the added new line is printed in the logs:
+
+         ```bash
+         kubectl logs pythonapp<TAB>
+         ```
+      
+   2. Maliciously try to deploy version 1 without it being detected:
+
+      1. Push the image of version 1 to the registry under the tag `2`: 
+   
+         ```bash
+         docker tag <image registry>.<image name>:3 <image registry>.<image name>:4
+         docker push <image registry>.<image name>:4
+         ```
+
+      2. Deploy the fake version 2:
+         ```bash
+         helm uninstall pythonapp 
+         helm install pythonapp target/helm 
+         ```
+
+      3. Verify that the program fails:
+
+         ```bash
+         kubectl logs pythonapp<TAB>
+         ```
+         
+      4. If you want, you can fix the application by overwriting 
+      the fake version 2 image with the correct version 2:
+
+      ```bash
+      run.sh
+      ```
+
+## Detailed Explanation 
+
+In case you are interested in what is going on under the hood, we explain the 
+steps in some more details below.
+
+### Building a Confidential Image
+
+Our objective is to build a confidential container image to run this application in an encrypted memory region (a.k.a. enclave) and ensure that environment variables are securely passed to the application only after the application was attested and verified. Otherwise, one could, by changing the arguments passed to a Python engine, run completely different functionality.
 
 Note that we want to outsource the management of Kubernetes to an external provider. Hence, we do not want Kubernetes nor any Kubernetes admin to be able to see the value of our environment variables - at no time: neither during the runtime nor during the startup time. Of course, only our original Python program should be able to be able to access the value. Any modification of the Python program must be detected.
 
 Note also that the cloud provider takes care of the integrity of the Kubernetes cluster using traditional isolation mechanisms (e.g., isolation using VMs and containers).  Kubernetes will not have access to any data, code, or key material of the application: their confidentiality, integrity and freshness will all be protected by SCONE. 
+
+![Objectives](objective.png)
+
+#### The Manifest files
 
 We can build a confidential container images and applications consisting of multiple container images with the help of a manifests:
 
@@ -151,7 +610,7 @@ We can build a confidential container images and applications consisting of mult
 - `service manifest`: describes how to build a confidential image to deploy a confidential service. For example, we want to run a Python program inside an enclave. This `service manifest` is defined by the application or service owner.
 - `security policy`:  describes how to attest a service and to provision secrets / configuration to a service instance. This is automatically derived form the `meshfile` and `service file`. It can generate secrets that now admin can see. These secrets can be generated inside of an enclave or these secrets can be retrieved from an external key store like a HSM.
 
-### Service Manifest
+##### Service Manifest
 
 Our Python program uses environment variables that need to be protected:
 
@@ -161,6 +620,10 @@ Our Python program uses environment variables that need to be protected:
   - We define a secret with name `password` as part of the secrets section. This has a length of 10 characters that are randomly selected by SCONE CAS.
   - The value of this secret can be referred to by "$$SCONE::password". This value is only available for our Python program. In general, we recommend to share secrets amongst the services of the same application mesh only.
   - We define this locally in the manifest for this service. Hence, we define it in section `local` - this cannot be modified in the `Meshfile` (i.e., a manifest that describes how to connect services).
+
+![Confidential Configuration](configuration.png)
+
+![service](service.png)
 
 We build the confidential container image with the help of the `build` section:
 
@@ -207,7 +670,19 @@ build:
     - print_env.py
 ```
 
-## Application Manifest (aka `meshfile`)
+> **NOTE:** You do not need a service manifest for 
+> **curated confidential service** like `memcached`, `nginx`, `MariaDB`, etc, 
+> since the images already contain all required information. 
+> We show this in a [different tutorial](missing link).
+
+> **NOTE:** We typically use one repository near the Kubernetes cluster to store 
+> all images. 
+> We protect the access to this repo using a Kubernetes secret. 
+> Typically, we use a secret called `sconeapps`,
+
+
+
+##### Application Mesh Manifest (aka `meshfile`)
 
 A cloud-native application typically consists of multiple services. In this example, we start with one service.
 
@@ -249,26 +724,67 @@ services:
     image: registry.scontain.com:5050/cicd/python_hello_user:latest
 ```
 
-## Setup
+![meshfile](meshfile.png)
 
-We have implemented `sconectl` in Rust. In case, you have Rust already installed, just execute:
+![locations](locations.png)
 
-```bash
-cargo install sconectl
-```
+![typical locations of artifacts](typical_locations.png)
 
-### Troubleshooting
+![Confidential Secret Generation](generateSecrets.png)
 
-**Note**: You can run script `run.sh` to set up / update your rust environment and to  install `sconectl` with the help of Rust. It will also execute the remaining steps of this tutorial.
+![helm install](helm_install.png)
 
-In case you install manually, errors might appear since Rust is not installed or out-of-date. If this `cargo` would fail, ensure that
+
+## Troubleshooting
+
+### Installation of Rust and Cargo
+
+> **Note**: You can run script `run.sh` to set up / update your rust environment and to  install `sconectl` with the help of Rust. 
+> It will however also execute the build and deploy steps of this tutorial.
+
+In case you install manually, errors might appear since Rust is not installed or out-of-date. 
+If this is the case and `cargo` fails, ensure that
 
 - you have `Rust` installed on your system. and 
 - it is up-to-date (you might get syntax errors if your Rust installation is old).
 
 If Rust is not yet installed or too old, you can use [`rustup`](https://www.rust-lang.org/tools/install) to install `Rust`.
 
-## Example
+### Docker Container Registry Access
+
+#### Not allowed to pull from scone registry
+
+This could fail for the following two reasons:
+
+1. You have not yet requested access to the SCONE registry, 
+which you can do by sending an email to `info@scontain.com` 
+and ask for access to the 
+`registry.scontain.com:5050/cicd/sconcli` image.  
+2. You not have logged in to docker using `docker login` with 
+the correct [gitlab access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html). 
+[Generate an access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token) 
+and pass it to `docker login` using the `--password-stdin` argument.
+
+#### Not allowed to push to your registry
+
+In our experience if the line `"credsStore": "desktop"` is present in your 
+`~/.docker/config.json` file you might not be able to push to your registry,
+although you are logged in to docker and have the correct access rights.
+
+#### Inconsistent Kubernetes Deployment of Application
+
+Some Kubernetes services are configured to automatically deploy 
+new images as soon as thye are pushed to the repository. 
+If this is the case, you need to run 
+`sconectl apply -f service.yml --no-push` when building 
+the images of your services.
+This ensures that the container image 
+that is generated is not pushed until after you have build the 
+application mesh. 
+Then, after applying the meshfile, you can manually push the images for 
+your services using `docker push`.
+
+## `sconectl` Examples
 
 Depending what Manifest you apply, different command line options might be available. To get a list of options, for a given manifest, you can execute:
 
