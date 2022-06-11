@@ -9,7 +9,7 @@ NC='\e[0m' # No Color
 
 RELEASE="pythonapp"
 
-# print an error message on an error exiting
+# print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
 
