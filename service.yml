@@ -2,18 +2,18 @@ apiVersion: scone/5.8
 kind: genservice
 
 # define environment variables
-#  - local ones are only visible for this service
+#  - local ones are kept confidential, i.e., only visible to this service
 #  - global ones are defined for all services in a mesh
 
 environment:
-  local:
+  local: # export env vars to other services
     - name: SCONE_HEAP
       value: 760M
     - name: SCONE_LOG
       value: error
     - name: API_PASSWORD
       value: "$$SCONE::password$$"  # get from CAS
-  global:     # values defined/overwritten in Meshfile
+  global:     # import env vars from other services. Their values are set in the meshfile
     - name: API_USER  # get value from Meshfile
 
 # define secrets that are managed by CAS 
@@ -26,7 +26,7 @@ secrets:
 build:
   name: python-hello-user
   kind: python
-  to: registry.scontain.com:5050/cicd/python_hello_user:latest
+  to: registry.scontain.com:5050/cicd/tutorial_windows/goodimagename:latest
   pwd: /python
   command: python3 print_env.py
   copy:

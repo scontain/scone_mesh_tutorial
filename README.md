@@ -64,8 +64,7 @@ Our objectives in this tutorial are to provide:
 
 > **NOTE:** *Consistency protected* means that the version of the protected 
 > resource cannot be changed, unless a software update is authorized by the 
-> application owner. How this is done is shown in a 
-> [different tutorial](missing link).
+> application owner. 
 
 This means we in this tutorial choose to let the program and the user ID to be 
 readable but not changeable, and the password to be neither. 
@@ -85,7 +84,7 @@ software installed. We provide a `bash` shell script to verify this,
 and install what is missing. Run:
 
 ```bash
-check_prerequisites.sh
+./check_prerequisites.sh
 ```
 
 to automatically perform the following actions:
@@ -95,10 +94,6 @@ to automatically perform the following actions:
 3. Check whether [docker](https://docs.docker.com/get-docker/), 
 [helm](https://helm.sh/docs/intro/install/) and 
 [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) are installed.
-4. Check whether you have access rights to the SCONE docker image 
-`registry.scontain.com:5050/cicd/sconecli:latest`.
-   - If this fails, check the [troubleshooting section](#not-allowed-to-pull-from-scone-registry) 
-   on what to do.
 
 > **NOTE:** In case rust or cargo are missing, `check_prerequisites.sh` 
 > installs them, which relies on `curl` being installed on your system. 
@@ -109,10 +104,10 @@ to automatically perform the following actions:
 
 > **NOTE:** For information on how to use `sconectl`, run `sconectl --help`
 
-Apart from installing the software handled by the check_prerequisites.sh` script, 
+Apart from installing the software handled by the `check_prerequisites.sh` script, 
 you also need:
 
-- Read and write access to a container registry, where you want to store 
+- read and write access to a container registry, where you want to store 
 your container image with the Hello World service.
 - Access to a [Kubernetes](https://kubernetes.io) cluster, 
 to which you want to deploy your Hello World application.
@@ -229,23 +224,18 @@ to build and run your confidential application on Kubernetes.
 >   helm install pythonapp target/helm
 >   ```
 
-> **NOTE:** `run.sh` also calls ``check_prerequisites.sh`and thus install
-> any missing requirements (see [Step 0](#step-0-requirements)).
+> **NOTE:** `run.sh` also installs
+> any missing requirements (see [Step 0](#step-0-requirements)) by 
+> calling `check_prerequisites.sh` and checks whether you have 
+> access rights to the SCONE docker image 
+> `registry.scontain.com:5050/cicd/sconecli:latest`.
+> If the latter fails, check the
+> [troubleshooting section](#not-allowed-to-pull-from-scone-registry)
+> on what to do.
+
 
 **Congratulations! You made it!** You now have the confidential 
 Hello World application running on your Kubernetes cluster. 
-In the next step we will show you how you can verify that the 
-password, user ID and program indeed are protected according to 
-our [objectives](#objectives).
-
-### Step 4: Ensure the Desired Protection
-
-In the section [Objectives](#objectives) we stated how we wanted
-to protect our data and program in this tutorial. In this section 
-we will show you how to ensure that these objectives, one by one. 
-But first we will ensure that the application is functioning as desired.
-
-#### Ensure the functionality
 
 Assuming you have `kubectl` command line completion installed and your kubeconfig
 set-up correctly, you can look at the log of the pod of
@@ -266,28 +256,48 @@ Stop me by executing 'helm uninstall pythonapp'
 ...
 ```
 
+
+In the next step we will show you how you can verify that the 
+password, user ID and program indeed are protected according to 
+our [objectives](#objectives).
+
+### Step 4: Ensure the Desired Protection
+
+In the section [Objectives](#objectives) we stated how we wanted
+to protect our data and program in this tutorial. In this section 
+we will show you how to verify that these objectives were achieved, 
+one by one.
+
+> **NOTE:** It out of scope of this tutorial to show why a malicious user, 
+> authorized as the system administrator of the CAS 
+> (as opposed to the system administrator of the application owner), 
+> will also fail in attacking the protected resources.
+
 #### Ensure Confidentiality Protection
 
-Our objective in this tutorial was to ensure the confidentiality of our 
-secret password stored in the environment variable `API_PASSWORD`,
-whereas both the program and the username stored in 
+One of our objectives in this tutorial, was to ensure the confidentiality 
+of our password stored in the environment variable `API_PASSWORD`,
+whereas both the program itself and the username stored in 
 `API_USER` were allowed to be visible.
 
-Log in to the container running the Hello World service by executing: 
+To check the confidentiality of the password, username and program, 
+we perform the following steps:
 
-```bash
-kubectl exec -it pythonapp-<TAB> -- bash
-```
-This will take you to the command line prompt inside the container.
+1. Log in to the container running the Hello World service by executing: 
 
-1. Check to make sure you can **_not_** read the value of the password 
+   ```bash
+   kubectl exec -it pythonapp-<TAB> -- bash
+   ```
+
+   This will take you to the command line prompt inside the container.
+3. Check to make sure you can **_not_** read the value of the password 
 environment variable:
 
    ```bash
    echo $API_PASSWORD
    ``` 
 
-2. Check to make sure you can read the username:
+4. Check to make sure you can read the username:
 
    ```bash
    echo $API_USER`
@@ -295,7 +305,7 @@ environment variable:
    
    The output should be `myself`.
 
-3. Check to make sure you can read the program:
+5. Check to make sure you can read the program:
 
    ```bash
    # find the program inside the container by looking for a unique substring
@@ -303,19 +313,23 @@ environment variable:
    # view the content of the file you found
    cat <program file>
    ```
-   The output should be the same program you wrote 
+   The output should be the same program as you wrote 
 in [Step 1](#step-1-write-the-services-of-your-application) 
 of this tutorial, i.e. the content of `print_env.py` 
 in the repository.
 
 #### Ensure Integrity Protection
 
-Our objective in this tutorial was to ensure the integrity of our program 
-as well as our username and confidential password that are stored in the 
-environment variables `API_USER` and `API_PASSWORD`, respectively.
+One of our objectives in this tutorial, was to ensure the integrity 
+of our program as well as our username and password, 
+that are stored in the environment variables `API_USER` and `API_PASSWORD`, 
+respectively. This means we have to verify that one cannot change
+those resources without the change being detected.
 
-1. Check the integrity of the secret password by trying to modify the 
-environment variable `API_PASSWORD`:
+To check the integrity of the password, username and program, 
+we perform the following steps:
+
+1. Try to modify the environment variable `API_PASSWORD`:
    
    ```bash
    # Set the API_PASSWORD environment variable
@@ -325,8 +339,7 @@ environment variable `API_PASSWORD`:
    ```
    
    Both commands should fail.
-2. Check the integrity protection of the username environment variable by
-trying to modify it:
+3. Try to modify the environment variable `API_USER`:
    
    ```bash
    # Set the API_USER environment variable
@@ -336,7 +349,7 @@ trying to modify it:
    ```
    
    Both commands should fail.
-3. Check the integrity protection of the program: 
+4. Verify the integrety protection of the program: 
    1. Find the program file: 
 
       ```bash
@@ -356,26 +369,21 @@ trying to modify it:
 
 #### Ensure Consistency Protection
 
-Our objective in this tutorial was to ensure the consistency of our program, 
-username and password. This means that we need to show that, 
+One of our objective in this tutorial, was to ensure the consistency of 
+our program, username and password. This means that we need to show that, 
 as soon as the process of the service starts up, 
 we detect if somebody tried to revert to an older version of the application. 
-
-To simulate an attack on the consistency protection of one of the three 
-resources, i.e., username, password or program code,
-we first deploy the application with a new version of the resource, 
-and then maliciously try and deploy the  
-application with the old version of the resource.
 
 > **NOTE:** Changing the values of the username, password and/or program 
 > in any other way than running an unintended, previously valid, version
 > is prevented by the integrity protection, as opposed to the consistency 
 > protection.
 
-> **NOTE:** It out of scope of this tutorial to show why a malicious user, 
-> authorized as the system administrator of the CAS 
-> (as opposed to the system administrator of the application owner), 
-> will also fail in attacking the consistency protection.
+To simulate an attack on the consistency protection of one of the three 
+resources, i.e., username, password or program code,
+we first deploy the application with a new version of the resource, 
+and then maliciously try and deploy the  
+application with the old version of the resource:
 
 1. To verify the consistency protection of the **password**, 
 we would have to create and deploy a new version of the application, 
@@ -419,114 +427,6 @@ this is considered to be a new, authorized version, i.e., version 3.
    Hence, since we didn't succeed in reverting to the username of version 1 
 without the change being detected, 
 the attack on the consistency protection of the username failed.
-
-**************3. To verify the consistency protection of the **password**, 
-we will create a new version of the application, 
-i.e., version 2, which only differs from version 1 in its password.  
-
-   1. Remember the checksum of the password written in the logs of the
-   currently deployed version (i.e., version 1) of the application:
-   
-      ```bash
-      kubectl logs pythonapp<TAB>
-      ```
-      
-   2. Create a new version, i.e., version 2, of the password by changing the 
-   size of the password in `service.yml`, for example to 11:
-   
-      ```bash
-      ...
-      secrets:
-        global:
-        - name: password
-          kind: ascii
-          size: 11
-      ...
-      ```
-   
-   3. Change the image tag in `service.yml` under `build.to` to `2`.
-   4. Change the image tag in `mesh.yml` under `services.image` to `2`.
-   5. Deploy the new version, i.e., version 2, of the application:
-   
-      ```bash
-      run.sh
-      ```
-
-   6. Verify that the second version of the application is running, 
-   by making sure the checksum of the password is different from before:
-
-      ```bash
-      kubectl logs pythonapp<TAB>
-      ```
-
-   7. Push the image of version 1 to the registry under the tag `2`: 
-   
-      ```bash
-      docker tag <image registry>.<image name>:1 <image registry>.<image name>:2
-      docker push <image registry>.<image name>:2
-      ```
-
-   8. Deploy the fake version 2.
-   9. Verify that program fails:
-
-      ```bash
-      kubectl logs pythonapp<TAB>
-      ```
-   10. Fix the application by overwriting the fake version 2 image with the 
-   correct version 2:
-
-      ```bash
-      run.sh
-      ```
-
-   11. To verify the consistency protection of the **username**, we will create a 
-new version of the application, i.e., version 3, which only differs from 
-version 2 in its username.  
-
-       1. Create a third version, i.e., version 3, of the username by changing the 
-       value of API_USER in `mesh.yml`:
-   
-          ```bash
-          ...
-          env:
-            - name: API_USER
-              value: myNEWself
-          ...
-          ```
-   
-       2. Change the image tag in `service.yml` under `build.to` to `3`.
-       3. Change the image tag in `mesh.yml` under `services.image` to `3`.
-       4. Deploy the new version, i.e., version 3, of the application:
-   
-          ```bash
-          run.sh
-          ```
-
-       5. Verify that the third version of the application is running, 
-       by making sure `Hello 'myNEWself'` is printed in the logs:
-
-          ```bash
-          kubectl logs pythonapp<TAB>
-          ```
-
-       6. Push the image of version 2 to the registry under the tag `3`: 
-   
-          ```bash
-          docker tag <image registry>.<image name>:2 <image registry>.<image name>:3
-          docker push <image registry>.<image name>:3
-          ```
-
-       7. Deploy the fake version 3.
-       8. Verify that program fails:
-
-          ```bash
-          kubectl logs pythonapp<TAB>
-          ```
-       9. Fix the application by overwriting the image with the correct version 3:
-
-          ```bash
-          run.sh
-          ```**************
 
 1. To verify the consistency protection of the **program**, 
 we would have to create and deploy a new version of the application, 
@@ -583,14 +483,14 @@ The malicious attack would try to revert to use the program code of version 1:
       4. If you want, you can fix the application by overwriting 
       the fake version 2 image with the correct version 2:
 
-      ```bash
-      run.sh
-      ```
+         ```bash
+         run.sh
+         ```
 
 ## Detailed Explanation 
 
-In case you are interested in what is going on under the hood, we explain the 
-steps in some more details below.
+In case you are interested in what is going on under the hood, 
+we explain the steps in some more details below.
 
 ### Building a Confidential Image
 
