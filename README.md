@@ -111,13 +111,14 @@ you also need:
 your container image with the Hello World service.
 - Access to a [Kubernetes](https://kubernetes.io) cluster, 
 to which you want to deploy your Hello World application.
-  - On this cluster, you need to install: 
-    - the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
-      service:
-        - `helm install sgxdevplugin sconeapps/sgxdevplugin`
-    - the [SCONE LAS](https://sconedocs.github.io/helm_las/) 
-      service:
-        - `helm install las sconeapps/las`
+  - On this cluster, you need to install the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
+      service and the [SCONE LAS](https://sconedocs.github.io/helm_las/) 
+      service. Assuming you have the desired kubeconfig file at 
+      `~/.kube/config` or pointed to by your `$KUBECONFIG` environment 
+      variable, run the following command to do so: 
+      ```bash
+      sconctl init
+      ```
 
 ### Step 1: Write the Services of Your Application
 
@@ -689,13 +690,13 @@ your services using `docker push`.
 Depending what Manifest you apply, different command line options might be available. To get a list of options, for a given manifest, you can execute:
 
 ```bash
-sconectl apply -f service.yml --help
+sconectl apply -f service.yaml --help
 ```
 
 You can print which environment variables you can define and also their default values by executing:
 
 ```bash
-sconectl apply -f service.yml -p
+sconectl apply -f service.yaml -p
 ```
 
 ### Building a Service Image
@@ -703,7 +704,7 @@ sconectl apply -f service.yml -p
 We can now apply a manifest as follows (and we do not want to push to the repo just yet):
 
 ```bash
-sconectl apply -f service.yml --no-push
+sconectl apply -f service.yaml --no-push
 ```
 
 ### Displaying Environment Variables
@@ -711,5 +712,5 @@ sconectl apply -f service.yml --no-push
 We can show which variables must be defined in a `meshfile` using option `-p`:
 
 ```bash
-sconectl apply -f mesh.yml -p
+sconectl apply -f mesh.yaml -p
 ```

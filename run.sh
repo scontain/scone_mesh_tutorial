@@ -7,37 +7,50 @@ BLUE='\e[34m'
 ORANGE='\e[33m'
 NC='\e[0m' # No Color
 
-# print an error message on an error exiting
+RELEASE="pythonapp"
+
+# print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-trap 'if [ $? -ne 0 ]; then echo "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
+trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
 
 # Check to make sure all prerequisites are installed
 ./check_prerequisites.sh
 
-echo -e "${BLUE}let's ensure that we build everything from scratch${NC}"
+echo -e "${BLUE}Checking that we have access to the base container image${NC}"
+
+docker pull registry.scontain.com:5050/cicd/sconecli:latest 2> /dev/null || { 
+    echo -e "${RED}You must get access to image `cicd/sconecli:latest`." 
+    echo -e "Please send email info@scontain.com to ask for access${NC}"
+    exit 1
+}
+
+
+echo -e "${BLUE}let's ensure that we build everything from scratch${NC}" 
 rm -rf target
 
-echo -e  "${BLUE}build service image"
-echo -e  " - if the pull fails, you might not have access to image cicd/sconecli:latest. Please send email to info@scontain.com to ask for access."
-echo -e  " - if the push fails, add --no-push or change the TO field${NC}"
- 
-sconectl apply -f service.yml 
 
-echo -e "${BLUE}build application - push policies"
-echo -e "  - this fails, if we have no access to the namespace"
-echo -e "  - ensure to update the namespace to one that you control${NC}"
+echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"
+echo -e  "${BLUE} - if the push fails, add --no-push to avoid pusing the image, or${NC}"
+echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo to which you have permission to push.${NC}"
 
-sconectl apply -f mesh.yml
 
-echo -e "${BLUE}Uninstalling application in case it was previously installed - ignoring any errors${NC}"
+sconectl apply -f service.yaml
 
-helm uninstall pythonapp 2> /dev/null || true 
 
-echo -e "${BLUE}install application"
-echo -e " - this requires that kubectl gives access to you K8s cluster"
-echo -e " - we first ensure that the old release is not running anymore${NC}"
+echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
+echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"
+echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique name in '${ORANGE}mesh.yaml${NC}'"
 
-helm install pythonapp target/helm/
+sconectl apply -f mesh.yaml
 
-echo -e "${BLUE}Check the logs by executing 'kubectl logs pythonapp<TAB>'"
-echo -e "Uninstall by executign 'helm uninstall pythonapp'${NC}"
+echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${RELEASE}"
+echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
+
+helm uninstall ${RELEASE} 2> /dev/null || true 
+
+echo -e "${BLUE}install application:${NC} helm install ${RELEASE} target/helm/"
+
+helm install ${RELEASE} target/helm/
+
+echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${RELEASE}<TAB>"
+echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE}"

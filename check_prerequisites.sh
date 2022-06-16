@@ -19,13 +19,12 @@ fi
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'if [ $? -ne 0 ]; then echo "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
 
-echo -e "${BLUE}Checking that we have access to sconectl${NC}"
 
+echo -e "${BLUE}Checking that we have access to sconectl${NC}"
 if ! command -v sconectl &> /dev/null
 then
     echo -e "${ORANGE}No sconectl found! Installing sconectl!${NC}"
-
-    # ensure we have access to a new Rust installation
+    echo -e "${ORANGE}Ensuring that we have access to a new Rust installation${NC}"
 
     if ! command -v rustup &> /dev/null
     then
@@ -34,28 +33,30 @@ then
     else
         echo -e "${ORANGE}Ensuring Rust is up to date${NC}"
         rustup update
-    fi
+    fi  
 
     cargo install sconectl
 fi
 
-echo -e "${BLUE}Checking that we have access to docker${NC}"
 
+echo -e "${BLUE}Checking that we have access to docker${NC}"
 if ! command -v docker &> /dev/null
 then
     echo -e "${RED}No docker found! You need to install docker or podman. EXITING.${NC}"
     exit 1
 fi
 
-if ! command -v helm &> /dev/null
+if ! command -v kubectl &> /dev/null
 then
-    echo -e "${RED}No helm found! You need to install helm. EXITING.${NC}"
+    echo -e "${RED}Command 'kubectl' not found!${NC}"
+    echo -e "- ${ORANGE}Please install - see https://kubernetes.io/docs/tasks/tools/${NC}"
     exit 1
 fi
 
-if ! command -v kubectl &> /dev/null
+if ! command -v helm &> /dev/null
 then
-    echo -e "${RED}No kubectl found! You need to install kubectl. EXITING.${NC}"
+    echo -e "${RED}Command 'helm' not found!${NC}"
+    echo -e "- ${ORANGE}Please install - see https://helm.sh/docs/helm/helm_install/${NC}"
     exit 1
 fi
 
