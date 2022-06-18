@@ -11,6 +11,8 @@ environment:
       value: 760M
     - name: SCONE_LOG
       value: error
+    - name: SCONE_ALLOW_DLOPEN
+      value: 1
     - name: API_PASSWORD
       value: "$$SCONE::password$$"  # get from CAS
   global:     # import env vars from other services. Their values are set in the meshfile
@@ -22,6 +24,8 @@ secrets:
   - name: password
     kind: ascii
     size: 10
+
+requirements: requirements.txt
 
 build:
   name: python-hello-user

@@ -46,6 +46,7 @@ then
     exit 1
 fi
 
+echo -e "${BLUE}Checking that we have access to kubectl${NC}"
 if ! command -v kubectl &> /dev/null
 then
     echo -e "${RED}Command 'kubectl' not found!${NC}"
@@ -53,6 +54,7 @@ then
     exit 1
 fi
 
+echo -e "${BLUE}Checking that we have access to helm${NC}"
 if ! command -v helm &> /dev/null
 then
     echo -e "${RED}Command 'helm' not found!${NC}"
