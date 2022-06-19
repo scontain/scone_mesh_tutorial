@@ -306,6 +306,22 @@ to protect our data and program in this tutorial. In this section
 we will show you how to verify that these objectives were achieved, 
 one by one.
 
+> **NOTE:** To check the protection of the password, username and program, 
+> we will need to examine the logs of the container running 
+> the Hello World service, 
+> and/or execute some commands inside the container itself. 
+> To perform those actions, you can use the following commands:
+> 
+> ```bash
+> # List all pods in the default namespace:
+> kubectl get pods
+> # The name of the pod we are looking for, starts with 'pythonapp-python-hello-user'.
+> # View the log of the pod:
+> kubectl logs <pod name>
+> # Log-in to the container of the pod:
+> kubectl exec -it <pod name> -- sh
+> ```
+
 > **NOTE:** It out of scope of this tutorial to show why a malicious user, 
 > authorized as the system administrator of the CAS 
 > (as opposed to the system administrator of the application owner), 
@@ -313,111 +329,222 @@ one by one.
 
 #### Ensure Confidentiality Protection
 
-One of our objectives in this tutorial, was to ensure the confidentiality 
+One of our objectives in this tutorial, is to ensure the confidentiality 
 of our password stored in the environment variable `API_PASSWORD`,
 whereas both the program itself and the username stored in 
-`API_USER` were allowed to be visible.
+`API_USER` are allowed to be visible.
 
-To check the confidentiality of the password, username and program, 
-we perform the following steps:
+##### Verify Confidentiality of `API_PASSWORD`
 
-1. Log in to the container running the Hello World service by executing: 
-
-   ```bash
-   kubectl exec -it pythonapp-<TAB> -- sh
-   ```
-
-   This will take you to the command line prompt inside the container.
-2. Check to make sure you can **_not_** read the value of the password 
+On the command line prompt inside the container,
+verify that you **_cannot_** read the value of the password 
 environment variable:
 
-   ```bash
-   echo $API_PASSWORD
-   ``` 
+```bash
+echo $API_PASSWORD
+``` 
 
-3. Check whether you can read the username inside the container:
+To make sure the value pf `API_PASSWORD` is not visible somewhere 
+else inside the container we also execute, although it will take
+a while to complete:
 
-   ```bash
-   echo $API_USER`
-   ```
+```bash
+grep -r API_PASSWORD /
+``` 
+
+Furthermore, you can look through the generated files in the 
+repository to see if you can find the value of `API_PASSWORD`, 
+by executing the following locally, i.e. outside of the container:
+
+```bash
+grep -r API_PASSWORD ./target
+``` 
+
+##### Verify Confidentiality of `API_USER`
+
+You can check whether you can read the value of the `API_USER` 
+environment variable inside the container:
+
+```bash
+echo $API_USER`
+```
    
-   As you can see it is not visible here, but if you look in 
-`mesh.yaml` (in the repository outside of the container) the application owner 
-sysadmin will find the value of `API_USER` (i.e. `myself`) 
+As you can see it is not visible here, but by looking in 
+`mesh.yaml` (in the repository outside of the container) the 
+application owner sysadmin will find the value of `API_USER` 
 quite easily:
-   ```bash
-   ...
-   # define environment variables
-   env:
-     - name: API_USER
-       value: myself
-   ...
-   ```
 
-4. Check whether you can read the program:
+```bash
+...
+# define environment variables
+env:
+  - name: API_USER
+    value: myself
+...
+```
+   
+This means the `API_USER` environment variable is not confidential, 
+but this is not a problem since it does not violate the desired 
+confidentiality protection level.
 
-   ```bash
-   grep -r "thanks for passing along" /lib -A 10 -B 20
-   ```
+##### Verify Confidentiality of the Source Code
 
-   The output will be the program you wrote 
+Inside the container, check whether you can read the program:
+
+```bash
+grep -r "thanks for passing along" /lib -A 10 -B 20
+```
+
+The output will be the program you wrote 
 in [Step 1](#step-1-write-the-services-of-your-application) 
 of this tutorial, i.e. the content of the repository
 file `print_env.py`.
 
+This means the program is not confidential, 
+but this is not a problem, 
+since it does not violate the desired 
+confidentiality protection level.
+
 #### Ensure Integrity Protection
 
-One of our objectives in this tutorial, was to ensure the integrity 
+One of our objectives in this tutorial, 
+is to ensure the integrity 
 of our program as well as our username and password, 
 that are stored in the environment variables `API_USER` and `API_PASSWORD`, 
-respectively. This means we have to verify that one cannot change
+respectively. 
+
+To verify that the desired level of integrity protection 
+is achieved, we therefore have to verify that one cannot change
 those resources without the change being detected.
 
-To check the integrity of the password, username and program, 
+##### Verify Integrity Protection of `API_PASSWORD` and `API_USER`
+
+To check the integrity of the password and username, 
 we perform the following steps:
 
-1. Try to modify the environment variable `API_PASSWORD`:
+1. Look in the log of the container and remember the current 
+username and the hash of the current password:
+
+   ```bash
+   kubectl logs <pod name>
+   ```
+   
+2. Try to modify the environment variables `API_PASSWORD` and 
+`API_USER` inside the container:
    
    ```bash
+   # Log-in to the container
+   kubectl exec -it <pod name> -- sh
    # Set the API_PASSWORD environment variable
-   export API_PASSWORD="MY NEW INCORRECT PASSWORD"
-   # View the API_PASSWORD environment variable
-   echo $API_PASSWORD
+   export API_PASSWORD=incorrect_pw
+   # Set the API_USER environment variable
+   export API_USER=incorrect_user
    ```
    
-   Both commands should fail.
-3. Try to modify the environment variable `API_USER`:
+   Although we succeed to set both environment variables, 
+   when examining the logs 
+   we see that both the username and the hash of the password
+   are identical to the ones we remember from the previous step.
+   
+3. We also want to try to modify the environment variables and 
+restart the container. Execute:
    
    ```bash
-   # Set the API_USER environment variable
-   export API_USER="MY NEW INCORRECT PASSWORD"
-   # View the API_USER environment variable
-   echo $API_USER
+   kubectl edit deploy pythonapp-python-hello-user
+   ```
+   and in the editor that opens up, add the password and username 
+   variables to the list of environment variables of the container:
+
+   ```bash
+   ...
+   spec:
+     ...
+     template:
+       ...
+       spec:
+         ...
+         containers:
+           ...
+           env:
+             ...
+           - name: API_PASSWORD
+             value: incorrect_pw
+           - name: API_USER
+             value: incorrect_user
+   ...
    ```
    
-   Both commands should fail.
-4. Verify the integrety protection of the program: 
-   1. Find the program file: 
+   Save and exit the editor. This will create a new pod and container.
+4. Verify that the username and hash of the password in the logs 
+   of the new pod are the same as the ones we remembered from the first step:
 
-      ```bash
-      grep -re "thanks for passing along" /lib 
-      ```
-      
-   2. Edit the program file. Any change made to the file should make the 
-   attestation fail, and the program should fail to run. 
-   3. Verify that the edited program fails to run by checking its logs:
+   ```bash
+   kubectl logs <new pod name>
+   ```
+
+##### Verify the Integrity Protection of the Program: 
+
+To verify that we cannot run a modified program without it being 
+detected, we try two approaches.
+First, we modify the program inside the container, and then 
+we rebuild the image with a modified program and restart the 
+container using this image. In both cases we see that the modification
+is detected.
+
+1. Find the program file inside the container: 
+
+   ```bash
+   grep -re "thanks for passing along" /lib 
+   ```
+
+2. Edit the program file, by changing a message 
+   printed out in the loop.
+3. Verify that the log message of the currently running program
+did not change.
+4. Execute the edited program in the current container, by executing the
+command specified in `service.yaml`:
    
-      ```bash
-      # Exit the container
-      exit
-      # Check the logs 
-      kubectl logs pythonapp<TAB>
-      ```
+   ```bash
+   python3 print_env.py
+   ```
+   
+   This fails due to a signature failure.
+5. To rebuild the image, modify the `print_env.py` outside of the container, in the same 
+fashion as you just did inside the container.
+6. Execute:
+   
+   ```bash
+   sconectl apply -f service.yaml
+   ```
+   
+   This rebuilds a signed image of the modified code and 
+   overwrites the original image with the modified one.
+7. Log-in into the container again and reboot it:
+   
+   ```bash
+   reboot
+   ```
+8. Check the logs of the newly rebooted container, and notice 
+an attestation failure:
 
+   ```bash
+   [SCONE|FATAL] src/process/init.c:476:__scone_prepare_secure_config(): Could not initialize enclave state: Attestation failed
+     Caused by: CAS sent an attestation/configuration error: DCAP quote verification failed
+     Caused by: Failed to verify DCAP report
+     Caused by: The program enclave is not trustworthy
+       Caused by: None of the required enclave properties are met by the enclave
+       Caused by: Not all of the required enclave properties are met by the enclave
+       Caused by: None of the required enclave properties are met by the enclave
+       Error 1 of 2: Unexpected enclave measurement (MRENCLAVE, 0e62020589972fba3ae70225cf6cd958897bbdd5eee878c5badf5928d95cfaae) - Expected 5e753b24ae9c62c5d86f0fc6e1acb663f0debdcee99f6c327de66cbf3ce3ef66
+       Error 2 of 2: Unexpected enclave measurement (MRENCLAVE, 0e62020589972fba3ae70225cf6cd958897bbdd5eee878c5badf5928d95cfaae) - Expected 2b16b78fc54fa13ce038a9abbdc7fbc4b87f12e42ca6ae07654d7d4c387ea13a
+   Note: Connecting to CAS at edge.scone-cas.cf (port 18765) using service ID myPythonAppZ/pythonapp/python3
+   ```
+   
 #### Ensure Consistency Protection
 
-One of our objective in this tutorial, was to ensure the consistency of 
-our program, username and password. This means that we need to show that, 
+One of our objective in this tutorial, is to ensure the consistency of 
+our program, username and password. To verifiy that these objectives are
+achieved we therefore need to show that, 
 as soon as the process of the service starts up, 
 we detect if somebody tried to revert to an older version of the application. 
 
@@ -432,12 +559,14 @@ we first deploy the application with a new version of the resource,
 and then maliciously try and deploy the  
 application with the old version of the resource:
 
-1. To verify the consistency protection of the **password**, 
+##### Verify the Consistency Protection of `API_PASSWORD`
+
+To verify the consistency protection of the **password**, 
 we would have to create and deploy a new version of the application, 
 i.e., version 2, which only differs from version 1 in its password.
 The malicious attack would try to revert to use the password of version 1.
 
-   Since the password needs to be confidential, 
+Since the password needs to be confidential, 
 even to the sysadmin of the application owner, it is generated by CAS. 
 
    > **NOTE:** CAS does not regenerate the password 
@@ -446,7 +575,7 @@ even to the sysadmin of the application owner, it is generated by CAS.
    > version, we need to change the way we want it generated, for example 
    > by changing the length of the password.
 
-   However, as soon as the password is regenerated to be used in version 2, 
+However, as soon as the password is regenerated to be used in version 2, 
 the old password is no longer present, neither in CAS nor anywhere else, 
 and we therefore have nothing to which we can revert. 
 But let us anyway assume that the attacker in some 
@@ -455,85 +584,89 @@ upload it to CAS, in order for it to be the correct password.
 As soon as the upload to CAS has taken place, however,
 this is considered to be a new, authorized version, i.e., version 3. 
 
-   Hence, since we didn't succeed in reverting to the password of version 1 
+Hence, since we didn't succeed in reverting to the password of version 1 
 without the change being detected, 
 the attack on the consistency protection of the password failed.
 
-2. To verify the consistency protection of the **username**, 
+##### Verify the Consistency Protection of `API_USER`
+
+To verify the consistency protection of the **username**, 
 we would have to create and deploy a new version of the application, 
 i.e., version 2, which only differs from version 1 in its username.
 The malicious attack would try to revert to use the username of version 1.
 
-   The value of the username is specified in `mesh.yaml` and needs to be 
+The value of the username is specified in `mesh.yaml` and needs to be 
 uploaded to CAS for it to be considered to be the correct username. 
 To revert to the username of version 1, the attacker would thus have to 
 upload it to CAS.
 As soon as the upload to CAS has taken place, however,
 this is considered to be a new, authorized version, i.e., version 3. 
 
-   Hence, since we didn't succeed in reverting to the username of version 1 
+Hence, since we didn't succeed in reverting to the username of version 1 
 without the change being detected, 
 the attack on the consistency protection of the username failed.
 
-1. To verify the consistency protection of the **program**, 
+##### Verify the Consistency Protection of the Program 
+
+To verify the consistency protection of the **program**, 
 we would have to create and deploy a new version of the application, 
 i.e., version 2, which differs from version 1 in its program code.
 The malicious attack would try to revert to use the program code of version 1:
 
-   1. Build and deploy version 2: 
-      1. Create a new version, i.e., version 2, of the program from 
-      [Step 1](#step-1-write-the-services-of-your-application) by adding
-      the following line to `print_env.py`:
+1. Build and deploy version 2: 
+   1. Create a new version, i.e., version 2, of the program by changing
+   a log message printed in the loop in `print_env.py` in the repository. 
+   2. Change the image tag in `service.yaml` under `build.to` to `2`.
+   3. Change the image tag in `mesh.yaml` under `services.image` to `2`.
+   4. Build and deploy the new version, version 2, of the application:
    
-         ```python
-         ...
-         print(f"This new version of the program also prints this line.", flush=True)
-         ...
-         ```
-   
-      2. Change the image tag in `service.yaml` under `build.to` to `2`.
-      3. Change the image tag in `mesh.yaml` under `services.image` to `2`.
-      4. Deploy the new version, version 2, of the application:
-   
-         ```bash
-         run.sh
-         ```
+      ```bash
+      ./run.sh
+      ```
 
-      5. Verify that version 2 is running, 
-         by making sure the added new line is printed in the logs:
+2. Verify that version 2 is running, 
+by making sure the new log message is printed in the logs:
 
-         ```bash
-         kubectl logs pythonapp<TAB>
-         ```
+   ```bash
+   kubectl logs <pod name>
+   ```
       
-   2. Maliciously try to deploy version 1 without it being detected:
+3. Maliciously try to deploy version 1 without it being detected:
+   1. Push the image of version 1 to the registry under the tag `2`: 
 
-      1. Push the image of version 1 to the registry under the tag `2`: 
+      ```bash
+      docker tag <image registry>/<image name>:1 <image registry>/<image name>:2
+      docker push <image registry>/<image name>:2
+      ```
+
+   2. Deploy the fake version 2:
+      ```bash
+      helm uninstall pythonapp 
+      helm install pythonapp target/helm 
+      ```
+
+4. Verify that the program fails:
+   ```bash
+   kubectl get pods
+   kubectl logs <pod name>
+   ```
    
-         ```bash
-         docker tag <image registry>.<image name>:3 <image registry>.<image name>:4
-         docker push <image registry>.<image name>:4
-         ```
+   The pod is in `Error` state and its logs show an attestation failure:
 
-      2. Deploy the fake version 2:
-         ```bash
-         helm uninstall pythonapp 
-         helm install pythonapp target/helm 
-         ```
-
-      3. Verify that the program fails:
-
-         ```bash
-         kubectl logs pythonapp<TAB>
-         ```
-         
-      4. If you want, you can fix the application by overwriting 
-      the fake version 2 image with the correct version 2:
-
-         ```bash
-         run.sh
-         ```
-
+   ```bash
+   ...
+   [SCONE|FATAL] src/process/init.c:476:__scone_prepare_secure_config(): Could not initialize enclave state: Attestation failed
+     Caused by: CAS sent an attestation/configuration error: DCAP quote verification failed
+     Caused by: Failed to verify DCAP report
+     Caused by: The program enclave is not trustworthy
+       Caused by: None of the required enclave properties are met by the enclave
+       Caused by: Not all of the required enclave properties are met by the enclave
+       Caused by: None of the required enclave properties are met by the enclave
+       Error 1 of 2: Unexpected enclave measurement (MRENCLAVE, 51c22fa42b6970af6c44eceaab1ce7ef77385e0ddd8cb31cc4f018bcfb04d818) - Expected 8e51357d6424cf8b20c36f567ebbd4afa07c9e58912107c0beda436602c1d342
+       Error 2 of 2: Unexpected enclave measurement (MRENCLAVE, 51c22fa42b6970af6c44eceaab1ce7ef77385e0ddd8cb31cc4f018bcfb04d818) - Expected 0e62020589972fba3ae70225cf6cd958897bbdd5eee878c5badf5928d95cfaae
+   Note: Connecting to CAS at edge.scone-cas.cf (port 18765) using service ID myPythonAppZ/pythonapp/python3
+   ```
+   
 ## Detailed Explanation 
 
 In case you are interested in what is going on under the hood, 

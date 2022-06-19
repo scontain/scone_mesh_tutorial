@@ -30,7 +30,7 @@ requirements: requirements.txt
 build:
   name: python-hello-user
   kind: python
-  to: registry.scontain.com:5050/cicd/tutorial_windows/goodimagename:latest
+  to: registry.scontain.com:5050/cicd/python_hello_user:1
   pwd: /python
   command: python3 print_env.py
   copy:
