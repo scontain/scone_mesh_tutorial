@@ -35,6 +35,8 @@ build:
   command: python3 print_env.py
   copy:
     - print_env.py
+  signature:
+    sign: true
   run:
     - > 
      echo "You can also RUN additional commands in the same way as docker build RUN commands"
