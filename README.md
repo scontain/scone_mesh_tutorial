@@ -243,8 +243,7 @@ to build and run your confidential application on Kubernetes.
 
 **Congratulations! You made it!** You now have the confidential `Hello World` application running on your Kubernetes cluster.
 
-Assuming you have `kubectl` command line completion installed and your `kubeconfig`
-is set-up correctly, you can look at the log of the pod of your service by executing the following command:
+You can look at the log of the pod of your service by executing the following commands:
 
 ```bash
 # List all pods in the default namespace:
@@ -525,7 +524,7 @@ Since the password needs to be confidential, even to the sysadmin of the applica
    > version, we need to change the way we want it generated, for example
    > by changing the length of the password.
 
-However, as soon as the password is regenerated to be used in version 2, the old password is no longer present, neither in CAS nor anywhere else, and we therefore have nothing to which we can revert. But let us anyway assume that the attacker in some way had indeed become a copy of the version 1 password, they would have to upload it to CAS, in order for it to be the correct password. As soon as the upload to CAS has taken place, however,
+However, as soon as the password is regenerated to be used in version 2, the old password is no longer present, neither in CAS nor anywhere else, and we therefore have nothing to which we can revert. But let us anyway assume that the attacker in some way had indeed gotten a hold of a copy of the version 1 password, they would have to upload it to CAS, in order for it to be the correct password. As soon as the upload to CAS has taken place, however,
 this is considered to be a new, authorized version, i.e., version 3.
 
 Hence, since we didn't succeed in reverting to the password of version 1 without the change being detected, the attack on the consistency protection of the password failed.
