@@ -2,11 +2,11 @@ apiVersion: scone/5.8
 kind: genservice
 
 # define environment variables
-#  - local ones are kept confidential, i.e., only visible to this service
+#  - local ones are only visible for this service
 #  - global ones are defined for all services in a mesh
 
 environment:
-  local: # export env vars to other services
+  local:
     - name: SCONE_HEAP
       value: 760M
     - name: SCONE_LOG
@@ -15,7 +15,7 @@ environment:
       value: 1
     - name: API_PASSWORD
       value: "$$SCONE::password$$"  # get from CAS
-  global:     # import env vars from other services. Their values are set in the meshfile
+  global:     # values defined/overwritten in Meshfile
     - name: API_USER  # get value from Meshfile
 
 # define secrets that are managed by CAS 

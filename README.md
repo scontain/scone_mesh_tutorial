@@ -1,6 +1,6 @@
 # Confidential Hello World!
 
-In this tutorial, we show how to provide a simple cloud-native application with a secret such that **nobody** (except our program) can access the secret. In fact, not even users with root privileges and cloud providers with hardware access can access it or modify the program.
+In this tutorial, we show how to provide a simple cloud-native application with a secret such that **nobody** (except for the program itself) can access the secret. In fact, not even users with root privileges and cloud providers with hardware access can access it or modify the program.
 
 > **NOTE:** If you want to skip the introductory explanations,
 > you can jump right to the [**Quick Start Guide**](#quick-start-guide).
@@ -20,7 +20,7 @@ We want to execute this program in a typical environment that is managed by a cl
 
 The cloud provider operates the hardware, the cloud stack, the operating system, and Kubernetes. Relying on the cloud provider to do all this decreases the complexity of running a cloud application for us, but it usually also forces us to give a lot of power and trust to the cloud provider. The SCONE platform, however, allows us not to have to trust and give this power to neither the cloud provider nor malicious root users.
 
-Using SCONE, despite not having full control of neither the hardware nor the software setup, we can ensure that nobody (except our program) can change or read our password or can change the user ID or other parts of the program. We also ensure that we always run the desired version of our program.
+Using SCONE, despite not having full control of neither the hardware nor the software setup, we can ensure that nobody (except for the program itself) can change or read our password or can change the user ID or other parts of the program. We also ensure that we always run the desired version of our program.
 
 ## Objectives
 
@@ -36,11 +36,13 @@ Our objectives in this tutorial are to provide:
 > application.
 
 > **NOTE:** *Integrity protected* means that the protected resource
-> cannot be modified by entities not authorized by the security policy of the
-> application. All other changes are automatically be detected.
+> can only be modified by entities authorized by the security policy of the
+> application. All other changes are automatically be detected and cause the
+> program to terminate.
 
-> **NOTE:** *Consistency protected* means that we always use the latest version of a protected
-> resource. For example, one cannot start an old version of a program that was replaced by the application owner.
+> **NOTE:** *Consistency protected* means that changing the version of the protected 
+> resource will be detected and cause the program to terminate, unless the 
+> software update was authorized by the application owner.
 
 This means that in this tutorial, we choose to let the program and the user ID to be
 readable but not changeable, and the password to be neither. These properties hold even for people with **root access** and/or **physical access** to the hardware.
@@ -53,7 +55,7 @@ readable but not changeable, and the password to be neither. These properties ho
 
 ### Step 0: Requirements
 
-Many development system will already have most of the necessary
+Many development systems will already have most of the necessary
 software installed. We provide a `bash` shell script to verify this,
 and install what is missing. Run:
 
@@ -94,6 +96,14 @@ to which you want to deploy your Hello World application.
       ```bash
       sconectl init
       ```
+    
+    Check to make sure the two DaemonSets were created on the cluster:
+    
+    ```bash
+    kubectl get daemonsets las -n default
+    kubectl get daemonsets scone-plugin-sgxdevplugin -n default
+    ```
+
 
 ### Step 1: Write the Services of Your Application
 
@@ -237,10 +247,14 @@ Assuming you have `kubectl` command line completion installed and your `kubeconf
 is set-up correctly, you can look at the log of the pod of your service by executing the following command:
 
 ```bash
-kubectl logs pythonapp<TAB>
+# List all pods in the default namespace:
+kubectl get pods
+# The name of the pod we are looking for, starts with 'pythonapp-python-hello-user'.
+# View the log of the pod:
+kubectl logs <pod name>
 ```
 
-This should look something like the following:
+The log should look something like the following:
 
 ```
 export SCONE_QUEUES=8
@@ -332,7 +346,7 @@ grep -r API_PASSWORD ./target
 You can check whether you can read the value of the `API_USER` environment variable inside the container:
 
 ```bash
-echo $API_USER`
+echo $API_USER
 ```
 
 As you can see, it is not visible here. However, when looking in `mesh.yaml` (in the repository outside of the container) the application owner sysadmin will find the value of `API_USER` quite easily:
@@ -348,7 +362,7 @@ env:
    
 This means the `API_USER` environment variable is not confidential. This is not a problem since it does not violate the desired confidentiality protection level.
 
-##### Verify Confidentiality of the Source Code
+##### Verify Confidentiality of the Program
 
 Inside the container, check whether you can read the program:
 
@@ -359,6 +373,14 @@ grep -r "thanks for passing along" /lib -A 10 -B 20
 The output will be the program you wrote in [Step 1](#step-1-write-the-services-of-your-application) of this tutorial, i.e. the content of the repository file `print_env.py`.
 
 This means the program is not confidential, but this is not a problem, since it does not violate the desired confidentiality protection level.
+
+> **NOTE:** Using SCONE it is also possible to protect the confidentiality of 
+> the code so that nobody can view the program, but we do not include this 
+> feature in this example.
+
+> **NOTE:** Using SCONE it is also possible to protect the confidentiality of 
+> the code so that nobody can view the program, but we do not include this 
+> feature in this example.
 
 #### Ensure Integrity Protection
 
@@ -397,7 +419,7 @@ To check the integrity of the password and username, we perform the following st
 restart the container. To do so, execute:
 
    ```bash
-   kubectl edit deploy pythonapp-python-hello-user
+   kubectl edit deployment pythonapp-python-hello-user
    ```
 
    and in the editor that opens up, add the password and username
@@ -574,151 +596,6 @@ To verify the consistency protection of the **program**, we would have to create
        Error 2 of 2: Unexpected enclave measurement (MRENCLAVE, 51c22fa42b6970af6c44eceaab1ce7ef77385e0ddd8cb31cc4f018bcfb04d818) - Expected 0e62020589972fba3ae70225cf6cd958897bbdd5eee878c5badf5928d95cfaae
    Note: Connecting to CAS at edge.scone-cas.cf (port 18765) using service ID myPythonApp/pythonapp/python3
    ```
-
-## Detailed Explanation 
-
-In case you are interested in what is going on under the hood,  we explain the steps in some more details below.
-
-### Building a Confidential Image
-
-Our objective is to build a confidential container image to run this application in an encrypted memory region (a.k.a. enclave) and ensure that environment variables are securely passed to the application only after the application was attested and verified. Otherwise, one could, by changing the arguments passed to a Python engine, run completely different functionality.
-
-Note that we want to outsource the management of Kubernetes to an external provider. Hence, we do not want Kubernetes nor any Kubernetes admin to be able to see the value of our environment variables - at no time: neither during the runtime nor during the startup time. Of course, only our original Python program should be able to be able to access the value. Any modification of the Python program must be detected.
-
-Note also that the cloud provider takes care of the integrity of the Kubernetes cluster using traditional isolation mechanisms (e.g., isolation using VMs and containers).  Kubernetes will not have access to any data, code, or key material of the application: their confidentiality, integrity and freshness will all be protected by SCONE.
-
-![Objectives](objective.png)
-
-#### The Manifest Files
-
-We can build a confidential container images and applications consisting of multiple container images with the help of a manifests:
-
-- `Meshfile`:  describes how to build an application consisting of one or more images. This is defined by the application owner. This can define values that need to be **integrity** and **freshness** protected. We should avoid to define values that need to be **confidential** since admins of the application owner might see the meshfile.
-- `service manifest`: describes how to build a confidential image to deploy a confidential service. For example, we want to run a Python program inside an enclave. This `service manifest` is defined by the application or service owner.
-- `security policy`:  describes how to attest a service and to provision secrets / configuration to a service instance. This is automatically derived form the `meshfile` and `service file`. It can generate secrets that now admin can see. These secrets can be generated inside of an enclave or these secrets can be retrieved from an external key store like a HSM.
-
-##### Service Manifest
-
-Our Python program uses environment variables that need to be protected:
-
-- `API_USER` is an environment variable that is defined in the `Meshfile` . Hence, we add it to the `global` section. We could define a default value in the service manifest. This variable is integrity protected. While a cloud provider would not be able to see the value, an admin of the application owner might be able to see this. (Note that our Python program prints this value on the console indicating that we only want to protect its integrity).
-
-- `API_PASSWORD` is an API password and should not be known by anybody - not even an admin by the application owner. Hence, we ask SCONE CAS (Configuration and Attestation Service) to randomly select it inside an enclave.
-  - We define a secret with name `password` as part of the secrets section. This has a length of 10 characters that are randomly selected by SCONE CAS.
-  - The value of this secret can be referred to by "$$SCONE::password". This value is only available for our Python program. In general, we recommend to share secrets amongst the services of the same application mesh only.
-  - We define this locally in the manifest for this service. Hence, we define it in section `local` - this cannot be modified in the `Meshfile` (i.e., a manifest that describes how to connect services).
-
-![Confidential Configuration](configuration.png)
-
-![service](service.png)
-
-We build the confidential container image with the help of the `build` section:
-
-- `name`: set the name of the service deployed with this container image.
-- `kind`: `Python says that we need a Python engine to execute this program
-- `to`: is the name of the generated image
-- `pwd`: the working directory in which our Python program will be located
-- `command`:  this is the command line. This is protected to ensure that an adversary cannot change the arguments of our program. Changing the arguments would permit the adversary, for example, to print the value of the environment variables.
-- `copy`: a list of files or directories to copy into the image.
-
-```yml
-apiVersion: scone/5.8
-kind: genservice
-
-# define environment variables
-#  - local ones are only visible for this service
-#  - global ones are defined for all services in a mesh
-
-environment:
-  local:
-    - name: SCONE_HEAP
-      value: 760M
-    - name: SCONE_LOG
-      value: error
-    - name: API_PASSWORD
-      value: "$$SCONE::password$$"  # get from CAS
-  global:     # values defined/overwritten in Meshfile
-    - name: API_USER  # get value from Meshfile
-
-# define secrets that are managed by CAS 
-secrets:
-  global: 
-  - name: password
-    kind: ascii
-    size: 10
-
-build:
-  name: python_hello_user
-  kind: python
-  to: registry.scontain.com:5050/cicd/python_hello_user:latest
-  pwd: /python
-  command: python3 print_env.py
-  copy:
-    - print_env.py
-```
-
-> **NOTE:** You do not need a service manifest for
-> **curated confidential service** like `memcached`, `nginx`, `MariaDB`, etc,
-> since the images already contain all required information.
-> We show this in a [different tutorial](missing link).
-
-> **NOTE:** We typically use one repository near the Kubernetes cluster to store
-> all images. 
-> We protect the access to this repo using a Kubernetes secret.
-> Typically, we use a secret called `sconeapps`,
-
-##### Application Mesh Manifest (aka `Meshfile`)
-
-A cloud-native application typically consists of multiple services. In this example, we start with one service.
-
-To run an application, we need to specify which CAS instance we want to use. Actually, we typically can use multiple CAS instances for various aspects.
-
-Each application must define its own unique CAS namespace. This could have the same name as the namespace that we use to run this application in Kubernetes.
-
-We can define the environment variables that are marked as `global` by the individual services. If no default value was given, we must define a value here.
-
-The service section describes the set of services from which this application is composed of:
-
-- `name`: is a unique name of this service
-- `image`: is the name of the image.
-
-```yml
-apiVersion: scone/5.8
-kind: mesh
-
-cas:
-  - name: cas # cas used to store the policy of this application
-    alias: ["image", "security", "access", "attestation"] # use alias in case CAS instance has multiple roles
-    cas_url: edge.scone-cas.cf  # exported as {{cas_cas_cas_url}}
-    tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
-
-policy:
-  namespace: myPythonApp    # namespace on CAS instance `cas`
-
-# define environment variables   
-env:
-  - name: API_USER 
-    value: myself
-  - name: imagePullSecrets
-    value: SconeApps
-  - name: APP_SERVICE_PORT
-    value: 443
-
-services:
-  - name: pythonapp
-    image: registry.scontain.com:5050/cicd/python_hello_user:latest
-```
-
-![meshfile](meshfile.png)
-
-![locations](locations.png)
-
-![typical locations of artifacts](typical_locations.png)
-
-![Confidential Secret Generation](generateSecrets.png)
-
-![helm install](helm_install.png)
-
 
 ## Troubleshooting
 
