@@ -11,6 +11,8 @@ environment:
       value: 760M
     - name: SCONE_LOG
       value: error
+    - name: SCONE_ALLOW_DLOPEN
+      value: 1
     - name: API_PASSWORD
       value: "$$SCONE::password$$"  # get from CAS
   global:     # values defined/overwritten in Meshfile
@@ -23,14 +25,18 @@ secrets:
     kind: ascii
     size: 10
 
+requirements: requirements.txt
+
 build:
   name: python-hello-user
   kind: python
-  to: registry.scontain.com:5050/cicd/python_hello_user:latest
+  to: registry.scontain.com:5050/cicd/python_hello_user:1
   pwd: /python
   command: python3 print_env.py
   copy:
     - print_env.py
+  signature:
+    sign: true
   run:
     - > 
      echo "You can also RUN additional commands in the same way as docker build RUN commands"

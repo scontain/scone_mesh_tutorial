@@ -8,7 +8,7 @@ cas:
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
 policy:
-  namespace: myPythonAppZ    # namespace on CAS instance `cas`
+  namespace: myPythonAppAB    # namespace on CAS instance `cas`
 
 # define environment variables   
 env:
@@ -21,5 +21,5 @@ env:
 
 services:
   - name: pythonapp
-    image: registry.scontain.com:5050/cicd/python_hello_user:latest
+    image: registry.scontain.com:5050/cicd/python_hello_user:1
 

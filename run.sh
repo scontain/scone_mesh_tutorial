@@ -13,46 +13,8 @@ RELEASE="pythonapp"
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
 
-echo -e "${BLUE}Checking that we have access to sconectl${NC}"
-
-if ! command -v sconectl &> /dev/null
-then
-    echo -e "${ORANGE}No sconectl found! Installing sconectl!${NC}"
-    echo -e "${ORANGE}Ensuring that we have access to a new Rust installation${NC}"
-
-    if ! command -v rustup &> /dev/null
-    then
-        echo -e "${ORANGE}No Rust found! Installing Rust!${NC}"
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    else
-        echo -e "${ORANGE}Ensuring Rust is up to date${NC}"
-        rustup update
-    fi
-
-    cargo install sconectl
-fi
-
-echo -e "${BLUE}Checking that we have access to docker${NC}"
-
-if ! command -v docker &> /dev/null
-then
-    echo -e "${RED}No docker found! You need to install docker or podman. EXITING.${NC}"
-    exit 1
-fi
-
-if ! command -v kubectl &> /dev/null
-then
-    echo -e "${RED}Command 'kubectl' not found!${NC}"
-    echo -e "- ${ORANGE}Please install - see https://kubernetes.io/docs/tasks/tools/${NC}"
-    exit 1
-fi
-
-if ! command -v helm &> /dev/null
-then
-    echo -e "${RED}Command 'helm' not found!${NC}"
-    echo -e "- ${ORANGE}Please install - see https://helm.sh/docs/helm/helm_install/${NC}"
-    exit 1
-fi
+# Check to make sure all prerequisites are installed
+./check_prerequisites.sh
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
@@ -69,9 +31,9 @@ rm -rf target
 
 echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"
 echo -e  "${BLUE} - if the push fails, add --no-push to avoid pusing the image, or${NC}"
-echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo you have permission to push to.${NC}"
+echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo to which you have permission to push.${NC}"
 
- 
+
 sconectl apply -f service.yaml
 
 
