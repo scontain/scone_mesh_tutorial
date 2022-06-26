@@ -30,15 +30,15 @@ requirements: requirements.txt
 build:
   name: python-hello-user
   kind: python
-  to: registry.scontain.com:5050/cicd/python_hello_user:1
-  stable: registry.scontain.com:5050/cicd/python_hello_user:stable
+  to: registry.scontain.com:5050/cicd/python_hello_user:stable
   pwd: /python
   command: python3 print_env.py
   copy:
-    - print_env.py
+    - stable/print_env.py
   signature:
     sign: true
   run:
+    - mv /python/stable/print_env.py /python/print_env.py
     - > 
      echo "You can also RUN additional commands in the same way as docker build RUN commands"
      && echo "If you use multi-line commands, please do not forget to start lines with &&."
