@@ -2,8 +2,10 @@
 
 In this tutorial, we show how to provide a simple cloud-native application with a secret such that **nobody** (except for the program itself) can access the secret. In fact, not even users with root privileges and cloud providers with hardware access can access it or modify the program.
 
-> **NOTE:** If you want to skip the introductory explanations,
-> you can jump right to the [**Quick Start Guide**](#quick-start-guide).
+> **NOTE:** If you want to skip the introductory explanations, you can jump straight to the [**Quick Start Guide**](#quick-start-guide).
+
+> **NOTE:** If you want to learn how to verify that the desired levels of confidentiality, integrity and consistency protection are achieved,
+> you can jump straight to [**Verify the Desired Protection Level**](#verify-the-desired-protection-level).
 
 > **NOTE:** We also have
 > [other tutorials](https://sconedocs.github.io/workflows/)
@@ -37,7 +39,7 @@ Our objectives in this tutorial are to provide:
 
 > **NOTE:** *Integrity protected* means that the protected resource
 > can only be modified by entities authorized by the security policy of the
-> application. All other changes are automatically be detected and cause the
+> application. All other changes are automatically detected and cause the
 > program to terminate.
 
 > **NOTE:** *Consistency protected* means that changing the version of the protected 
@@ -87,22 +89,32 @@ you also need:
 your container image with the Hello World service.
 - Access to a [Kubernetes](https://kubernetes.io) cluster, 
 to which you want to deploy your Hello World application.
-  - On this cluster, you need to install the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
-      service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
-      service. Assuming you have the desired kubeconfig file at
-      `~/.kube/config` or pointed to by your `$KUBECONFIG` environment
-      variable, run the following command to do so:
 
-      ```bash
-      sconectl init
-      ```
+  > **NOTE:** Assuming you have a kubeconfig file, you can get access to the cluster by:
+  > 1. putting your kubeconfig file at `~/.kube/config`, or 
+  > 3. setting your `$KUBECONFIG` environment variable to point to it, or
+  > 4. adding the option `--kubeconfig /path/to/your/kubeconfig.file` to each of the following `kubectl` commands.
+
+- On your Kubernetes cluster, the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
+  service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
+  service need to be installed in the default Kubernetes namespace. 
+  You can install them by running: 
+      
+  ```bash
+  sconectl init
+  ```
+
+  You can check whether the two DaemonSets are installed by executing:
     
-    Check to make sure the two DaemonSets were created on the cluster:
-    
-    ```bash
-    kubectl get daemonsets las -n default
-    kubectl get daemonsets scone-plugin-sgxdevplugin -n default
-    ```
+  ```bash
+  kubectl get daemonsets las -n default
+  kubectl get daemonsets scone-plugin-sgxdevplugin -n default
+  ```
+
+  > **NOTE:** If you are not authorized to use `default` Kubernetes namespace, you will have to ask somebody with access to install the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
+  service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
+  service. 
+  > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights. 
 
 
 ### Step 1: Write the Services of Your Application
@@ -148,7 +160,7 @@ while True:
   new_pw = os.environ.get('API_PASSWORD', None)
   new_pw_checksum = None
   if new_pw:
-     new_pw_checksum = hashlib.md5(new_pw)
+     new_pw_checksum = hashlib.md5(new_pw.encode('utf-8')).hexdigest()
   print(f"The checksum of the current password is '{new_pw_checksum}'", 
         flush=True)
   if new_pw_checksum != pw_checksum:
@@ -160,7 +172,9 @@ while True:
   time.sleep(10)
 ```
 
-We read the environment variables periodically to be able to show below that these variables are properly protected: any change of the environment variables would result in an error exit.
+We read the environment variables periodically to be able to show below that these variables are properly protected.
+In the program we also check whether any of the environment variables has changed, print an error and exit if they did.
+This will however never happen, since the SCONE runtime system will detect the changes for us and not execute the program.
 
 ### Step 2: Create the Manifest Files
 
@@ -170,17 +184,17 @@ and a *mesh manifest file* (a.k.a. *meshfile*) for your application.
 In this `Hello World` example, this amounts to just two files which
 have already been created for you. You just need to:
 
-1. Change the `build.to` tag in the provided `service.yaml` file to point to
-the repository and image name and tag, to which you want to upload the generated
-container image containing the service.
-2. Change the `services.image` tag in the `mesh.yaml` file to point to the same
-image, which you chose to use in the `service.yaml` file in the previous step.
-3. Change the `policy.namespace` tag in the `mesh.yaml` file to a unique
+1. Change the `build.to` field in the provided `service.yaml` file to point to
+the repository and image name, to which you want to upload the generated
+container image containing the service. To make it easier to follow
+the steps below, we recommend using the image tag `1`.
+2. Change the `services.image` field in the `mesh.yaml` file to point to the same
+image as in the `service.yaml` file.
+3. Change the `policy.namespace` field in the `mesh.yaml` file to a unique
 [SCONE CAS namespace](https://sconedocs.github.io/namespace/) of your choice.
 
 > **NOTE:** A *service manifest file* is a `yaml` file, in which you describe the
 service by specifying different properties. These include but are not limited to:
-
 > - Secrets the service imports and exports. 
 >    - A secret can be exported either
 >      - to all other services (e.g., to export a public key),
@@ -276,16 +290,19 @@ export SCONE_FORK_OS=0
 export SCONE_EXTENSIONS_PATH=/lib/libbinary-fs.so
 musl version: 1.1.24
 SCONE version: 5.7.0 (Tue Jan 18 08:45:24 2022 +0100) 
-Enclave hash: dc01dee58a2283e150b7cb39d87fa2113ed83ff3fdce3ebfc0599c7bdbf7d3f0
-Hello 'myself' - thanks for passing along the API_PASSWORD
-The checksum of API_PASSWORD is 'b1225d17ae2d4ac762f8838f35c39962'
-Stop me by executing 'helm uninstall pythonapp'
+Enclave hash: 0e62020589972fba3ae70225cf6cd958897bbdd5eee878c5badf5928d95cfaae
+Application runs in SGX production mode
+Hello, 'myself' - thanks for passing along the API_PASSWORD
+The checksum of the original API_PASSWORD is 'a6f0d569c45ea68ff25d908234d3a4c6'
+Hello, user 'myself'!
+The checksum of the current password is 'a6f0d569c45ea68ff25d908234d3a4c6'
+Stop ME by executing 'helm uninstall pythonapp'
 ...
 ```
 
 In the next step, we will show you how you can verify that the password, user ID and program indeed are protected according to our [objectives](#objectives).
 
-### Step 4: Ensure the Desired Protection Level
+## Verify the Desired Protection Level
 
 In the section [Objectives](#objectives), we stated how we wanted to protect our data and program in this tutorial. In this section, we will show you how to verify that these objectives were achieved, one by one.
 
@@ -309,7 +326,7 @@ In the section [Objectives](#objectives), we stated how we wanted to protect our
 > even if authorized as the system administrator of the CAS,
 > will fail in attacking the protected resources.
 
-#### Ensure Confidentiality Protection
+### Verify Confidentiality Protection
 
 One of our objectives in this tutorial, is to ensure the confidentiality of our password stored in the environment variable `API_PASSWORD`, whereas both the program itself and the username stored in `API_USER` are allowed to be visible.
 
@@ -320,7 +337,7 @@ To execute the following attacks on the `hello world` program, log into the cont
    kubectl exec -it <pod name> -- sh
 ```
 
-##### Verify Confidentiality of `API_PASSWORD`
+#### Verify Confidentiality of `API_PASSWORD`
 
 On the command line prompt inside the container,verify that you **_cannot_** read the value of the password environment variable:
 
@@ -340,7 +357,7 @@ Furthermore, you can look through the generated files in the repository to see i
 grep -r API_PASSWORD ./target
 ```
 
-##### Verify Confidentiality of `API_USER`
+#### Verify Confidentiality of `API_USER`
 
 You can check whether you can read the value of the `API_USER` environment variable inside the container:
 
@@ -361,7 +378,7 @@ env:
    
 This means the `API_USER` environment variable is not confidential. This is not a problem since it does not violate the desired confidentiality protection level.
 
-##### Verify Confidentiality of the Program
+#### Verify Confidentiality of the Program
 
 Inside the container, check whether you can read the program:
 
@@ -377,17 +394,13 @@ This means the program is not confidential, but this is not a problem, since it 
 > the code so that nobody can view the program, but we do not include this 
 > feature in this example.
 
-> **NOTE:** Using SCONE it is also possible to protect the confidentiality of 
-> the code so that nobody can view the program, but we do not include this 
-> feature in this example.
-
-#### Ensure Integrity Protection
+### Verify Integrity Protection
 
 One of our objectives in this tutorial, is to ensure the integrity of our program as well as our username and password, that are stored in the environment variables `API_USER` and `API_PASSWORD`, respectively.
 
 To verify that the desired level of integrity protection is achieved, we therefore have to verify that one cannot change those resources without the change being detected.
 
-##### Verify Integrity Protection of `API_PASSWORD` and `API_USER`
+#### Verify Integrity Protection of `API_PASSWORD` and `API_USER`
 
 To check the integrity of the password and username, we perform the following steps:
 
@@ -451,7 +464,7 @@ restart the container. To do so, execute:
    kubectl logs <new pod name>
    ```
 
-##### Verify the Integrity Protection of the Program
+#### Verify the Integrity Protection of the Program
 
 To verify that we cannot run a modified program without it being detected, we try two approaches.
 First, we modify the program inside the container, and then we rebuild the image with a modified program and restart the container using this image. In both cases, we see that the modification is detected.
@@ -500,7 +513,7 @@ First, we modify the program inside the container, and then we rebuild the image
    Note: Connecting to CAS at edge.scone-cas.cf (port 18765) using service ID myPythonApp/pythonapp/python3
    ```
 
-#### Ensure Consistency Protection
+### Verify Consistency Protection
 
 One of our objective in this tutorial, is to ensure the consistency of our program, username and password. To verifiy that these objectives are achieved we therefore need to show that, as soon as the process of the service starts up, we detect if somebody tried to revert to an older version of the application.
 
@@ -511,25 +524,25 @@ One of our objective in this tutorial, is to ensure the consistency of our progr
 
 To simulate an attack on the consistency protection of one of the three resources, i.e., username, password or program code, we first deploy the application with a new version of the resource, and then maliciously try and deploy the application with the old version of the resource.
 
-##### Verify the Consistency Protection of `API_PASSWORD`
+#### Verify the Consistency Protection of `API_PASSWORD`
 
 To verify the consistency protection of the **password**, we would have to create and deploy a new version of the application, i.e., version 2, which only differs from version 1 in its password.
 The malicious attack would try to revert to use the password of version 1.
 
 Since the password needs to be confidential, even to the sysadmin of the application owner, it is generated by CAS.
 
-   > **NOTE:** CAS does not regenerate the password
-   > with each new version of the application.
-   > To trigger the regeneration of the password in a new application
-   > version, we need to change the way we want it generated, for example
-   > by changing the length of the password.
+> **NOTE:** CAS does not regenerate the password
+> with each new version of the application.
+> To trigger the regeneration of the password in a new application
+> version, we need to change the way we want it generated, for example
+> by changing the length of the password.
 
 However, as soon as the password is regenerated to be used in version 2, the old password is no longer present, neither in CAS nor anywhere else, and we therefore have nothing to which we can revert. But let us anyway assume that the attacker in some way had indeed gotten a hold of a copy of the version 1 password, they would have to upload it to CAS, in order for it to be the correct password. As soon as the upload to CAS has taken place, however,
 this is considered to be a new, authorized version, i.e., version 3.
 
 Hence, since we didn't succeed in reverting to the password of version 1 without the change being detected, the attack on the consistency protection of the password failed.
 
-##### Verify the Consistency Protection of `API_USER`
+#### Verify the Consistency Protection of `API_USER`
 
 To verify the consistency protection of the **username**, we would have to create and deploy a new version of the application, i.e., version 2, which only differs from version 1 in its username.vThe malicious attack would try to revert to use the username of version 1.
 
@@ -537,7 +550,7 @@ The value of the username is specified in `mesh.yaml` and needs to be uploaded t
 
 Hence, since we didn't succeed in reverting to the username of version 1 without the change being detected, the attack on the consistency protection of the username failed.
 
-##### Verify the Consistency Protection of the Program
+#### Verify the Consistency Protection of the Program
 
 To verify the consistency protection of the **program**, we would have to create and deploy a new version of the application, i.e., version 2, which differs from version 1 in its program code. The malicious attack would try to revert to use the program code of version 1:
 
@@ -635,7 +648,7 @@ although you are logged in to docker and have the correct access rights.
 #### Inconsistent Kubernetes Deployment of Application
 
 Some Kubernetes services are configured to automatically deploy 
-new images as soon as thye are pushed to the repository. 
+new images as soon as they are pushed to the repository. 
 If this is the case, you need to run 
 `sconectl apply -f service.yaml --no-push` when building 
 the images of your services.
