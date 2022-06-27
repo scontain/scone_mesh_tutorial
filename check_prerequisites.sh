@@ -58,7 +58,7 @@ echo -e "${BLUE}Checking that we have access to helm${NC}"
 if ! command -v helm &> /dev/null
 then
     echo -e "${RED}Command 'helm' not found!${NC}"
-    echo -e "- ${ORANGE}Please install - see https://helm.sh/docs/helm/helm_install/${NC}"
+    echo -e "- ${ORANGE}Please install - see https://helm.sh/docs/intro/install/${NC}"
     exit 1
 fi
 
