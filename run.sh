@@ -2,16 +2,72 @@
 
 set -e
 
+
 RED="\e[31m"
 BLUE='\e[34m'
 ORANGE='\e[33m'
 NC='\e[0m' # No Color
 
+DEFAULT_K8S_NAMESPACE=default
 RELEASE="pythonapp"
 
 # print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
+
+help_flag="--help"
+ns_flag="--namespace"
+ns_short_flag="-n"
+
+ns=$DEFAULT_K8S_NAMESPACE
+
+usage ()
+{
+  echo ""
+  echo "Usage:"
+  echo "    run.sh [$ns_flag kubernetes-namespace]"
+  echo "           [$help_flag]"
+  echo ""
+  echo ""
+  echo "Builds the application described in service.yaml and mesh.yaml and deploys"
+  echo "it into your kubernetes cluster."
+  echo ""
+  echo "Options:"
+  echo "    $ns_short_flag | $ns_flag:"
+  echo "                  The namespace in which the application should be deployed on the cluster."
+  echo "                  Default value:"
+  echo "                      $DEFAULT_K8S_NAMESPACE"
+  echo "    $help_flag:"
+  echo "                  Output this usage information and exit."
+  return
+}
+
+##### Parsing arguments
+
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    ${ns_flag} | ${ns_short_flag})
+      ns="$2"
+      shift # past argument
+      shift || true # past value
+      ;;
+    $help_flag)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown parameter passed: $1";
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [ ! -n "${ns}" ]; then
+  echo "Error: The namespace '$ns' is invalid."
+  usage
+  exit 1
+fi
 
 # Check to make sure all prerequisites are installed
 ./check_prerequisites.sh
@@ -30,7 +86,7 @@ rm -rf target
 
 
 echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"
-echo -e  "${BLUE} - if the push fails, add --no-push to avoid pusing the image, or${NC}"
+echo -e  "${BLUE} - if the push fails, add --no-push to avoid pushing the image, or${NC}"
 echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo to which you have permission to push.${NC}"
 
 
@@ -43,14 +99,14 @@ echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique n
 
 sconectl apply -f mesh.yaml
 
-echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${RELEASE}"
+echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall --namespace ${ns} ${RELEASE}"
 echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
 
-helm uninstall ${RELEASE} 2> /dev/null || true 
+helm uninstall --namespace ${ns} ${RELEASE} 2> /dev/null || true
 
-echo -e "${BLUE}install application:${NC} helm install ${RELEASE} target/helm/"
+echo -e "${BLUE}install application:${NC} helm install --namespace ${ns} ${RELEASE} target/helm/"
 
-helm install ${RELEASE} target/helm/
+helm install --namespace ${ns} ${RELEASE} target/helm/
 
-echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${RELEASE}<TAB>"
-echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE}"
+echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs --namespace ${ns} ${RELEASE}<TAB>"
+echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall --namespace ${ns} ${RELEASE}"
