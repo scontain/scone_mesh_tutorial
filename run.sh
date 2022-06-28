@@ -82,7 +82,7 @@ docker pull registry.scontain.com:5050/cicd/sconecli:latest 2> /dev/null || {
 
 
 echo -e "${BLUE}let's ensure that we build everything from scratch${NC}" 
-rm -rf target
+rm -rf target || echo -e "${ORANGE} Failed to delete target directory - ignoring this! ${NC}"
 
 
 echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"

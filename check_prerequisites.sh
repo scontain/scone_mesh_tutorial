@@ -33,8 +33,12 @@ then
     else
         echo -e "${ORANGE}Ensuring Rust is up to date${NC}"
         rustup update
-    fi  
-
+    fi
+    if ! command -v cc &> /dev/null
+    then
+       echo -e "${RED} No (g)cc found! Installing sconectl is likely to fail!${NC}"
+       echo -e "${ORANGE} On Ubuntu, you can install gcc as follows: sudo apt-get install -y build-essential ${NC}"
+    fi
     cargo install sconectl
 fi
 

@@ -97,8 +97,9 @@ to which you want to deploy your Hello World application.
 
 - On your Kubernetes cluster, the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
   service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
-  service need to be installed in the default Kubernetes namespace. 
-  You can install them by running: 
+  service need to be installed in the default Kubernetes namespace. Note that if your Kubernetes config does not give you access to the default namespace, this will fail. In case of our workshops, please skip this step.
+  
+  You can install them by running:
       
   ```bash
   sconectl init
@@ -114,7 +115,7 @@ to which you want to deploy your Hello World application.
   > **NOTE:** If you are not authorized to use `default` Kubernetes namespace, you will have to ask somebody with access to install the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
   service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
   service. 
-  > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights. 
+  > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights.
 
 
 ### Step 1: Write the Services of Your Application
