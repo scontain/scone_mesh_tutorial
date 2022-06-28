@@ -43,6 +43,6 @@ while True:
            f"The checksum of API_PASSWORD changed from '{pw_checksum}' to '{new_pw_checksum}'!")
      exit(1)
 
-  print("Stop ME by executing 'helm uninstall pythonapp'", flush=True)
+  print("Stop me by executing 'helm uninstall pythonapp'", flush=True)
   time.sleep(10)
 
