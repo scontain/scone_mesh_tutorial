@@ -25,7 +25,6 @@ secrets:
     kind: ascii
     size: 10
 
-requirements: requirements.txt
 
 build:
   name: python-hello-user
@@ -33,6 +32,7 @@ build:
   to: registry.scontain.com:5050/cicd/python_hello_user:1
   pwd: /python
   command: python3 print_env.py
+  requirements: requirements.txt
   copy:
     - print_env.py
   signature:
