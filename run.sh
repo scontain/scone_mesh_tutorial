@@ -8,7 +8,7 @@ BLUE='\e[34m'
 ORANGE='\e[33m'
 NC='\e[0m' # No Color
 
-DEFAULT_K8S_NAMESPACE=default
+DEFAULT_NAMESPACE=""
 RELEASE="pythonapp"
 
 # print an error message on an error exit
@@ -19,7 +19,7 @@ help_flag="--help"
 ns_flag="--namespace"
 ns_short_flag="-n"
 
-ns=$DEFAULT_K8S_NAMESPACE
+ns=$DEFAULT_NAMESPACE
 
 usage ()
 {
@@ -48,6 +48,11 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     ${ns_flag} | ${ns_short_flag})
       ns="$2"
+      if [ ! -n "${ns}" ]; then
+        echo "Error: The namespace '$ns' is invalid."
+        usage
+        exit 1
+      fi
       shift # past argument
       shift || true # past value
       ;;
@@ -64,9 +69,9 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [ ! -n "${ns}" ]; then
-  echo "Error: The namespace '$ns' is invalid."
-  usage
-  exit 1
+  namespace_arg=""
+else
+  namespace_arg="${ns_flag} ${ns} "
 fi
 
 # Check to make sure all prerequisites are installed
@@ -99,14 +104,14 @@ echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique n
 
 sconectl apply -f mesh.yaml
 
-echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall --namespace ${ns} ${RELEASE}"
+echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${namespace_args} ${RELEASE}"
 echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
 
-helm uninstall --namespace ${ns} ${RELEASE} 2> /dev/null || true
+helm uninstall $namespace_arg ${RELEASE} 2> /dev/null || true
 
-echo -e "${BLUE}install application:${NC} helm install --namespace ${ns} ${RELEASE} target/helm/"
+echo -e "${BLUE}install application:${NC} helm install ${namespace_args} ${RELEASE} target/helm/"
 
-helm install --namespace ${ns} ${RELEASE} target/helm/
+helm install $namespace_arg ${RELEASE} target/helm/
 
-echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs --namespace ${ns} ${RELEASE}<TAB>"
-echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall --namespace ${ns} ${RELEASE}"
+echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${namespace_args} ${RELEASE}<TAB>"
+echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${namespace_args} ${RELEASE}"
