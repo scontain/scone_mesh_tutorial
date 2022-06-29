@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+spec:
+  containers:
+  - name: client
+    image: yauritux/busybox-curl:latest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        while true
+          do
+            curl -s $API_ADDRESS:$API_PORT/version && echo
+            sleep 1
+          done
+    env:
+      - name: API_ADDRESS
+        value: "http://pythonapp-python-hello-user"
+      - name: API_PORT
+        value: "5000"
