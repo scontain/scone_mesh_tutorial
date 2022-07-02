@@ -3,10 +3,10 @@
 set -e
 
 
-RED="\e[31m"
-BLUE='\e[34m'
-ORANGE='\e[33m'
-NC='\e[0m' # No Color
+export RED='\e[31m'
+export BLUE='\e[34m'
+export ORANGE='\e[33m'
+export NC='\e[0m' # No Color
 
 DEFAULT_NAMESPACE=""
 RELEASE="pythonapp"
