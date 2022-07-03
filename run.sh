@@ -79,7 +79,7 @@ fi
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
-docker pull registry.scontain.com:5050/cicd/sconecli:latest 2> /dev/null || { 
+docker inspect registry.scontain.com:5050/cicd/sconecli:latest > /dev/null 2> /dev/null || docker pull registry.scontain.com:5050/cicd/sconecli:latest > /dev/null 2> /dev/null || { 
     echo -e "${RED}You must get access to image `cicd/sconecli:latest`." 
     echo -e "Please send email info@scontain.com to ask for access${NC}"
     exit 1
