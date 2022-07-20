@@ -72,6 +72,14 @@ then
     error_exit
 fi
 
+echo -e "${BLUE}Checking that we the CPU has all necessary CPU features enabled${NC}"
+if docker run --platform linux/amd64 -it registry.scontain.com:5050/cicd/check_cpufeatures:latest &> /dev/null
+then
+    echo -e "${RED}Docker does not seem to support all CPU features.${NC}"
+    echo -e "- ${ORANGE}Assuming you do not run on a modern Intel CPU. Please ensure that you pass the following options to qemu: -cpu qemu64,+ssse3,+sse3,+sse4.1,+sse4.2,+rdrand,+popcnt,+xsave,+aes${NC}" 
+    error_exit
+fi
+
 echo -e "${BLUE}Checking that we have access to kubectl${NC}"
 if ! command -v kubectl &> /dev/null
 then
