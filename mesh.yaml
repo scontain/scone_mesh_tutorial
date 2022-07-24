@@ -10,14 +10,24 @@ cas:
 policy:
   namespace: myPythonAppAB    # namespace on CAS instance `cas`
 
-# define environment variables   
+# define environment variables
+# - this is can be done for each individual service defined in the services section 
+#   - these definitions are only visible for this service
+#   - these definitions overwrite any definitions of the global or helm section 
+# - we define two special services:
+#   - "global": these definitions are shared by all services
+#   - "helm": this behaves like the "global" service - the intention is to
+#             collect helm specific definitions here
+
 env:
-  - name: API_USER 
-    value: myself
-  - name: imagePullSecrets
-    value: sconeapps
-  - name: APP_SERVICE_PORT
-    value: 443
+  - service: global
+    env:
+      - name: API_USER 
+        value: myself
+      - name: imagePullSecrets
+        value: sconeapps
+      - name: APP_SERVICE_PORT
+        value: 443
 
 services:
   - name: pythonapp
