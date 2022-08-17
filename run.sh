@@ -8,8 +8,9 @@ export BLUE='\e[34m'
 export ORANGE='\e[33m'
 export NC='\e[0m' # No Color
 
+source release.sh || true # get release name
+
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
-RELEASE="pythonapp"
 APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
 
 # print an error message on an error exit
@@ -19,13 +20,17 @@ trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - 
 help_flag="--help"
 ns_flag="--namespace"
 ns_short_flag="-n"
-repo_flag="--repo"
-repo_short_flag="-r"
+repo_flag="--image_repo"
+repo_short_flag="-i"
 verbose_flag="-v"
+verbose=""
+release_flag="--release"
+release_short_flag="-r"
 verbose=""
 
 ns="$DEFAULT_NAMESPACE"
 repo="$APP_IMAGE_REPO"
+release="$RELEASE"
 
 error_exit() {
   trap '' EXIT
@@ -37,8 +42,7 @@ usage ()
 {
   echo ""
   echo "Usage:"
-  echo "    run.sh [$ns_flag kubernetes-namespace]"
-  echo "           [$help_flag]"
+  echo "    run.sh [$ns_flag <kubernetes-namespace>] [$repo_flag <image repo>] [$release_flag <release name>] [$verbose_flag] [$help_flag]"
   echo ""
   echo ""
   echo "Builds the application described in service.yaml and mesh.yaml and deploys"
@@ -48,8 +52,11 @@ usage ()
   echo "    $ns_short_flag | $ns_flag"
   echo "                  The namespace in which the application should be deployed on the cluster."
   echo "                  Default value: \"$DEFAULT_NAMESPACE\""
+  echo "    $release_flag | $release_short_flag"
+  echo "                  The helm release name of the application. "
+  echo "                  Default value defined in file 'release.sh': RELEASE=\"$RELEASE\""
   echo "    $repo_short_flag | $repo_flag"
-  echo "                  Repo to use for pushing the generated confidential image"
+  echo "                  Container image repository to use for pushing the generated confidential image"
   echo "                  Default value is defined by environment variable:"
   echo "                    export APP_IMAGE_REPO=\"$APP_IMAGE_REPO\""
   echo "    $verbose_flag"
@@ -72,11 +79,11 @@ while [[ "$#" -gt 0 ]]; do
       shift # past argument
       shift || true # past value
       ;;
-    ${ns_flag} | ${ns_short_flag})
-      ns="$2"
-      if [ ! -n "${ns}" ]; then
+    ${release_flag} | ${release_short_flag})
+      release="$2"
+      if [ ! -n "${release}" ]; then
         usage
-        error_exit "Error: The namespace '$ns' is invalid."
+        error_exit "Error: The release name '$release' is invalid."
       fi
       shift # past argument
       shift || true # past value
@@ -142,11 +149,11 @@ sconectl apply -f mesh.yaml $verbose
 echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${namespace_args} ${RELEASE}"
 echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
 
-helm uninstall $namespace_arg ${RELEASE} 2> /dev/null || true
+helm uninstall $namespace_arg ${release} 2> /dev/null || true
 
 echo -e "${BLUE}install application:${NC} helm install ${namespace_args} ${RELEASE} target/helm/"
 
-helm install $namespace_arg ${RELEASE} target/helm/
+helm install $namespace_arg ${release} target/helm/
 
 echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${namespace_args} ${RELEASE}<TAB>"
 echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${namespace_args} ${RELEASE}"
