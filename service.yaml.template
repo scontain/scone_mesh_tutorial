@@ -29,7 +29,7 @@ secrets:
 build:
   name: python-hello-user
   kind: python
-  to: registry.scontain.com:5050/cicd/python_hello_user:1
+  to: $APP_IMAGE_REPO/python_hello_user:1
   pwd: /python
   command: python3 print_env.py
   requirements: requirements.txt

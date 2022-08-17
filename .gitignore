@@ -2,3 +2,5 @@ target
 .ash_history
 README.pdf
 .kube
+service.yaml
+mesh.yaml

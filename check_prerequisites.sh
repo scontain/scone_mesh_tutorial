@@ -96,6 +96,15 @@ then
     error_exit
 fi
 
+echo -e "${BLUE}Checking that we have access to envsubst${NC}"
+if ! command -v envsubst &> /dev/null
+then
+    echo -e "${RED}Command 'envsubst' not found!${NC}"
+    echo -e "- ${ORANGE}Please install envsubst${NC}"
+    error_exit
+fi
+
+
 echo -e "${BLUE}Checking that directory $HOME/.scone exits${NC}"
 if [[ ! -e "$HOME/.scone" ]] ; then 
   echo -e " - Creating directory $HOME/.scone"

@@ -8,8 +8,9 @@ export BLUE='\e[34m'
 export ORANGE='\e[33m'
 export NC='\e[0m' # No Color
 
-DEFAULT_NAMESPACE=""
+DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
 RELEASE="pythonapp"
+APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
 
 # print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
@@ -18,8 +19,17 @@ trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - 
 help_flag="--help"
 ns_flag="--namespace"
 ns_short_flag="-n"
+repo_flag="--repo"
+repo_short_flag="-r"
 
-ns=$DEFAULT_NAMESPACE
+ns="$DEFAULT_NAMESPACE"
+repo="$APP_IMAGE_REPO"
+
+error_exit() {
+  trap '' EXIT
+  echo -e "${RED}$1${NC}" 
+  exit 1
+}
 
 usage ()
 {
@@ -35,8 +45,11 @@ usage ()
   echo "Options:"
   echo "    $ns_short_flag | $ns_flag:"
   echo "                  The namespace in which the application should be deployed on the cluster."
-  echo "                  Default value:"
-  echo "                      $DEFAULT_K8S_NAMESPACE"
+  echo "                  Default value: \"$DEFAULT_NAMESPACE\""
+  echo "    $repo_short_flag | $repo_flag:"
+  echo "                  Repo to use for pushing the generated confidential image"
+  echo "                  Default value is defined by environment variable:"
+  echo "                    export APP_IMAGE_REPO=\"$APP_IMAGE_REPO\""
   echo "    $help_flag:"
   echo "                  Output this usage information and exit."
   return
@@ -49,9 +62,17 @@ while [[ "$#" -gt 0 ]]; do
     ${ns_flag} | ${ns_short_flag})
       ns="$2"
       if [ ! -n "${ns}" ]; then
-        echo "Error: The namespace '$ns' is invalid."
         usage
-        exit 1
+        error_exit "Error: The namespace '$ns' is invalid."
+      fi
+      shift # past argument
+      shift || true # past value
+      ;;
+    ${ns_flag} | ${ns_short_flag})
+      ns="$2"
+      if [ ! -n "${ns}" ]; then
+        usage
+        error_exit "Error: The namespace '$ns' is invalid."
       fi
       shift # past argument
       shift || true # past value
@@ -61,17 +82,21 @@ while [[ "$#" -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo "Error: Unknown parameter passed: $1";
       usage
-      exit 1
+      error_exit "Error: Unknown parameter passed: $1";
       ;;
   esac
 done
 
 if [ ! -n "${ns}" ]; then
-  namespace_arg=""
+    namespace_arg=""
 else
-  namespace_arg="${ns_flag} ${ns} "
+    namespace_arg="${ns_flag} ${ns} "
+fi
+
+if [  "${repo}" == "" ]; then
+    usage
+    error_exit  "Error: You must specify a repo."
 fi
 
 # Check to make sure all prerequisites are installed
@@ -79,10 +104,9 @@ fi
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
-docker inspect registry.scontain.com:5050/cicd/sconecli:latest > /dev/null 2> /dev/null || docker pull registry.scontain.com:5050/cicd/sconecli:latest > /dev/null 2> /dev/null || { 
-    echo -e "${RED}You must get access to image `cicd/sconecli:latest`." 
-    echo -e "Please send email info@scontain.com to ask for access${NC}"
-    exit 1
+docker inspect registry.scontain.com:5050/sconectl/sconecli:latest > /dev/null 2> /dev/null || docker pull registry.scontain.com:5050/sconectl/sconecli:latest > /dev/null 2> /dev/null || { 
+    echo -e "${RED}You must get access to image `sconectl/sconecli:latest`.${NC}" 
+    error_exit "Please send email info@scontain.com to ask for access"
 }
 
 
@@ -94,6 +118,7 @@ echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"
 echo -e  "${BLUE} - if the push fails, add --no-push to avoid pushing the image, or${NC}"
 echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo to which you have permission to push.${NC}"
 
+envsubst < service.yaml.template > service.yaml
 
 sconectl apply -f service.yaml
 
@@ -101,6 +126,8 @@ sconectl apply -f service.yaml
 echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
 echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"
 echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique name in '${ORANGE}mesh.yaml${NC}'"
+
+envsubst < mesh.yaml.template > mesh.yaml
 
 sconectl apply -f mesh.yaml
 
