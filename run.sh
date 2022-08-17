@@ -21,6 +21,8 @@ ns_flag="--namespace"
 ns_short_flag="-n"
 repo_flag="--repo"
 repo_short_flag="-r"
+verbose_flag="-v"
+verbose=""
 
 ns="$DEFAULT_NAMESPACE"
 repo="$APP_IMAGE_REPO"
@@ -43,14 +45,16 @@ usage ()
   echo "it into your kubernetes cluster."
   echo ""
   echo "Options:"
-  echo "    $ns_short_flag | $ns_flag:"
+  echo "    $ns_short_flag | $ns_flag"
   echo "                  The namespace in which the application should be deployed on the cluster."
   echo "                  Default value: \"$DEFAULT_NAMESPACE\""
-  echo "    $repo_short_flag | $repo_flag:"
+  echo "    $repo_short_flag | $repo_flag"
   echo "                  Repo to use for pushing the generated confidential image"
   echo "                  Default value is defined by environment variable:"
   echo "                    export APP_IMAGE_REPO=\"$APP_IMAGE_REPO\""
-  echo "    $help_flag:"
+  echo "    $verbose_flag"
+  echo "                  Enable verbose output"
+  echo "    $help_flag"
   echo "                  Output this usage information and exit."
   return
 }
@@ -76,6 +80,10 @@ while [[ "$#" -gt 0 ]]; do
       fi
       shift # past argument
       shift || true # past value
+      ;;
+    ${verbose_flag})
+      verbose="-vvvvvvvv"
+      shift # past argument
       ;;
     $help_flag)
       usage
@@ -120,7 +128,7 @@ echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANG
 
 envsubst < service.yaml.template > service.yaml
 
-sconectl apply -f service.yaml
+sconectl apply -f service.yaml $verbose
 
 
 echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
@@ -129,7 +137,7 @@ echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique n
 
 envsubst < mesh.yaml.template > mesh.yaml
 
-sconectl apply -f mesh.yaml
+sconectl apply -f mesh.yaml $verbose
 
 echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${namespace_args} ${RELEASE}"
 echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
