@@ -79,6 +79,15 @@ while [[ "$#" -gt 0 ]]; do
       shift # past argument
       shift || true # past value
       ;;
+    ${repo_flag} | ${repo_short_flag})
+      repo="$2"
+      if [ ! -n "${repo}" ]; then
+        usage
+        error_exit "Error: The repo name '$repo' is invalid."
+      fi
+      shift # past argument
+      shift || true # past value
+      ;;
     ${release_flag} | ${release_short_flag})
       release="$2"
       if [ ! -n "${release}" ]; then
