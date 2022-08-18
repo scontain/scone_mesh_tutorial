@@ -22,7 +22,7 @@ policy:
 env:
   - service: global
     env:
-      - name: API_USER 
+      - name: API_USER
         value: myself
       - name: imagePullSecrets
         value: sconeapps

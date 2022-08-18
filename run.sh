@@ -133,7 +133,7 @@ echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"
 echo -e  "${BLUE} - if the push fails, add --no-push to avoid pushing the image, or${NC}"
 echo -e  "${BLUE}   change in file '${ORANGE}service.yaml${BLUE}' field '${ORANGE}build.to${BLUE}' to a container repo to which you have permission to push.${NC}"
 
-envsubst < service.yaml.template > service.yaml
+SCONE="\$SCONE" envsubst < service.yaml.template > service.yaml
 
 sconectl apply -f service.yaml $verbose
 
@@ -142,7 +142,7 @@ echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
 echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"
 echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique name in '${ORANGE}mesh.yaml${NC}'"
 
-envsubst < mesh.yaml.template > mesh.yaml
+SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
 sconectl apply -f mesh.yaml $verbose
 
