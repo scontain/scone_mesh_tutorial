@@ -10,6 +10,13 @@ export NC='\e[0m' # No Color
 
 source release.sh || true # get release name
 
+if [ -z "$APP_NAMESPACE" ] ; then
+    export APP_NAMESPACE="pythonapp-$RANDOM-$RANDOM"
+    echo -e "export APP_NAMESPACE=pythonapp-$RANDOM-$RANDOM\n" >> release.sh  
+else 
+    echo "CAS Namespace already defined: $APP_NAMESPACE"
+fi
+
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
 APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
 
@@ -50,7 +57,7 @@ usage ()
   echo ""
   echo "Options:"
   echo "    $ns_short_flag | $ns_flag"
-  echo "                  The namespace in which the application should be deployed on the cluster."
+  echo "                  The Kubernetes namespace in which the application should be deployed on the cluster."
   echo "                  Default value: \"$DEFAULT_NAMESPACE\""
   echo "    $release_flag | $release_short_flag"
   echo "                  The helm release name of the application. "

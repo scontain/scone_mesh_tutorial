@@ -8,7 +8,7 @@ cas:
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
 policy:
-  namespace: myPythonAppAB    # namespace on CAS instance `cas`
+  namespace: $APP_NAMESPACE    # namespace on CAS instance `cas`
 
 # define environment variables
 # - this is can be done for each individual service defined in the services section 
