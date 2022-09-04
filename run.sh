@@ -11,7 +11,7 @@ export NC='\e[0m' # No Color
 source release.sh || true # get release name
 
 if [ -z "$APP_NAMESPACE" ] ; then
-    export APP_NAMESPACE="pythonapp-$RANDOM-$RANDOM"
+    export APP_NAMESPACE="$RELEASE-$RANDOM-$RANDOM"
     echo -e "export APP_NAMESPACE=pythonapp-$RANDOM-$RANDOM\n" >> release.sh  
 else 
     echo "CAS Namespace already defined: $APP_NAMESPACE"
@@ -129,6 +129,7 @@ if [  "${repo}" == "" ]; then
     usage
     error_exit  "Error: You must specify a repo."
 fi
+export APP_IMAGE_REPO="${repo}"
 
 # Check to make sure all prerequisites are installed
 ./check_prerequisites.sh
