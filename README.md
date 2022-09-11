@@ -251,7 +251,7 @@ to build and run your confidential application on Kubernetes.
 > any missing requirements (see [Step 0](#step-0-requirements)) by 
 > calling `check_prerequisites.sh` and checks whether you have 
 > access rights to the SCONE docker image 
-> `registry.scontain.com:5050/cicd/sconecli:latest`.
+> `registry.scontain.com:5050/sconectl/sconecli:latest`.
 > If the latter fails, check the
 > [troubleshooting section](#not-allowed-to-pull-from-scone-registry)
 > on what to do.
@@ -634,7 +634,7 @@ This could fail for the following two reasons:
 1. You have not yet requested access to the SCONE registry, 
 which you can do by sending an email to `info@scontain.com` 
 and ask for access to the 
-`registry.scontain.com:5050/cicd/sconcli` image.  
+`registry.scontain.com:5050/sconectl/sconcli` image.  
 2. You not have logged in to docker using `docker login` with 
 the correct [gitlab access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html). 
 [Generate an access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html#create-a-personal-access-token) 
