@@ -55,7 +55,7 @@ usage ()
   echo "    run.sh [$ns_flag <kubernetes-namespace>] [$repo_flag <image repo>] [$release_flag <release name>] [$verbose_flag] [$help_flag]"
   echo ""
   echo ""
-  echo "Builds the application described in service.yaml and mesh.yaml and deploys"
+  echo "Builds the application described in service.yaml.template and mesh.yaml.template and deploys"
   echo "it into your kubernetes cluster."
   echo ""
   echo "Options:"
