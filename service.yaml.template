@@ -10,7 +10,7 @@ environment:
     - name: SCONE_HEAP
       value: 760M
     - name: SCONE_LOG
-      value: error
+      value: debug
     - name: SCONE_ALLOW_DLOPEN
       value: 1
     - name: API_PASSWORD
