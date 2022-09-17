@@ -30,6 +30,6 @@ env:
         value: 443
 
 services:
-  - name: pythonapp
+  - name: pythonservice
     image: $APP_IMAGE_REPO/python_hello_user:1
 

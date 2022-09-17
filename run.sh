@@ -150,7 +150,7 @@ export RELEASE="$release"
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
-docker inspect registry.scontain.com:5050/sconectl/sconecli:latest > /dev/null 2> /dev/null || docker pull registry.scontain.com:5050/sconectl/sconecli:latest > /dev/null 2> /dev/null || { 
+docker inspect $SCONECTL_REPO/sconecli:latest > /dev/null 2> /dev/null || docker pull $SCONECTL_REPO/sconecli:latest > /dev/null 2> /dev/null || { 
     echo -e "${RED}You must get access to image `sconectl/sconecli:latest`.${NC}" 
     error_exit "Please send email info@scontain.com to ask for access"
 }
@@ -175,7 +175,7 @@ echo -e "  - update the namespace '${ORANGE}policy.namespace${NC}' to a unique n
 
 SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
-sconectl apply -f mesh.yaml $verbose $debug
+sconectl apply -f mesh.yaml --release "$RELEASE" $verbose $debug
 
 echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${namespace_args} ${RELEASE}"
 echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
