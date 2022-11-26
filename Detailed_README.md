@@ -73,7 +73,7 @@ secrets:
 build:
   name: python_hello_user
   kind: python
-  to: registry.MYREPO.com:5050/MYREPO/python_hello_user:latest
+  to: registry.MYREPO.com/MYREPO/python_hello_user:latest
   pwd: /python
   command: python3 print_env.py
   copy:
@@ -129,7 +129,7 @@ env:
 
 services:
   - name: pythonapp
-    image: registry.MYREPO.com:5050/MYREPO/python_hello_user:latest
+    image: registry.MYREPO.com/MYREPO/python_hello_user:latest
 ```
 
 ![meshfile](meshfile.png)

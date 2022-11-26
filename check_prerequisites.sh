@@ -59,7 +59,7 @@ fi
 echo -e "${BLUE}Checking that we can run container images for linux/amd64${NC}"
 if ! docker run --platform linux/amd64 -it --rm hello-world &> /dev/null
 then
-    echo -e "${RED}Docker does not seem to support argument '--plaform linux/amd64'"
+    echo -e "${RED}Docker does not seem to support argument '--platform linux/amd64'"
     echo -e "Please ensure that you can run the latest version of docker (i.e.,  API version >= 1.40)" 
     VERSIONS=$(docker version | grep "API version" | awk '{ print $3}')
     for i in $VERSIONS ; do
@@ -73,7 +73,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that you can pull the images ${NC}"
-if docker pull --platform linux/amd64 -it registry.scontain.com:5050/sconectl/check_cpufeatures:latest &> /dev/null
+if docker pull --platform linux/amd64 -it registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
 then
     echo -e "${RED}Docker does NOT seem to be able to pull the required container images.${NC}"
     echo -e "- ${ORANGE}1. Register an account with your company email at https://gitlab.scontain.com/users/sign_up.${NC}"
@@ -84,7 +84,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that we the CPU has all necessary CPU features enabled${NC}"
-if ! docker run --platform linux/amd64 -it --rm registry.scontain.com:5050/sconectl/check_cpufeatures:latest &> /dev/null
+if ! docker run --platform linux/amd64 -it --rm registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
 then
     echo -e "${RED}Docker does not seem to support all CPU features.${NC}"
     echo -e "- ${ORANGE}Assuming you do not run on a modern Intel CPU. Please ensure that you pass the following options to qemu: -cpu qemu64,+ssse3,+sse3,+sse4.1,+sse4.2,+rdrand,+popcnt,+xsave,+aes${NC}" 
@@ -136,14 +136,11 @@ fi
 
 
 echo -e "${BLUE}Checking that you have the local attestation service, the SGX Plugin, and the image pull secrets installed${NC}"
-if ! sconectl scone_init &> /dev/null
+#if ! sconectl scone_init &> /dev/null
+if ! ((kubectl get las | grep HEALTHY) && (kubectl get cas | grep HEALTHY) && (kubectl get sgxplugin | grep HEALTHY))
 then
     echo -e "${RED}It seems the Kubernetes cluster is not yet properly initialized!${NC}"
     echo -e "- ${ORANGE}1. Retrieve/create an access token https://sconedocs.github.io/registry/#create-an-access-token${NC}"
-    echo -e "- ${ORANGE}2. Store your access token. Run: export SECRET_TOKEN=\"...\" ${NC}"
-    echo -e "- ${ORANGE}3. Store the associated email address. Run: export SECRET_EMAIL=\"...\" ${NC}"
-    echo -e "- ${ORANGE}4. Store the associated user name. Run: export SECRET_USERNAME=\"...\" ${NC}"
-    echo -e "- ${ORANGE}5. Run: sconectl scone_init --image-pull-secret --secret-email \"$SECRET_EMAIL\"  --secret-token \"$SECRET_TOKEN\" --secret-username \"$SECRET_USERNAME\"${NC}"
-    echo -e "- ${ORANGE}6. Run: unset SECRET_TOKEN SECRET_EMAIL SECRET_USERNAME${NC}"
-    echo -e "- ${ORANGE}Please run ${NC}"
+    echo -e "- ${ORANGE}2. Install the SCONE operator: https://sconedocs.github.io/2_operator_installation/"
+    echo -e "- ${ORANGE}3. Install SGXPlugin, LAS, and CAS: https://sconedocs.github.io/4_quickstart/${NC}"
 fi

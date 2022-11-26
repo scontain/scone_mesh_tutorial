@@ -4,7 +4,7 @@ kind: mesh
 cas:
   - name: cas # cas used to store the policy of this application
     alias: ["image", "security", "access", "attestation"] # use alias in case CAS instance has multiple roles
-    cas_url: edge.scone-cas.cf  # exported as {{cas_cas_cas_url}}
+    cas_url: 150.165.15.77 # edge.scone-cas.cf  # exported as {{cas_cas_cas_url}}
     tolerance: "--only_for_testing-trust-any --only_for_testing-debug  --only_for_testing-ignore-signer -C -G -S"
 
 policy:

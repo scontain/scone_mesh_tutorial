@@ -19,7 +19,7 @@ fi
 
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
 export APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
-export SCONECTL_REPO=${SCONECTL_REPO:="registry.scontain.com:5050/sconectl"}
+export SCONECTL_REPO=${SCONECTL_REPO:="registry.scontain.com/sconectl"}
 
 # print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
