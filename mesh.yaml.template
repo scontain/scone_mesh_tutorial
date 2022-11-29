@@ -9,6 +9,7 @@ cas:
 
 policy:
   namespace: $APP_NAMESPACE    # namespace on CAS instance `cas`
+  tolerate: "outdated-tcb"
 
 # define environment variables
 # - this is can be done for each individual service defined in the services section 
