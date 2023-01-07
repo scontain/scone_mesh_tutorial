@@ -8,14 +8,9 @@ export BLUE='\e[34m'
 export ORANGE='\e[33m'
 export NC='\e[0m' # No Color
 
+APP_NAMESPACE=""
 source release.sh || true # get release name
 
-if [ -z "$APP_NAMESPACE" ] ; then
-    export APP_NAMESPACE="$RELEASE-$RANDOM-$RANDOM"
-    echo -e "export APP_NAMESPACE=$RELEASE-$RANDOM-$RANDOM\n" >> release.sh  
-else 
-    echo "CAS Namespace already defined: $APP_NAMESPACE"
-fi
 
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
 export APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
@@ -78,7 +73,7 @@ usage ()
   echo "                  Output this usage information and exit."
   echo ""
   echo "By default this uses the latest release of the SCONE Elements images. To use image from a different"
-  echo "repository (e.g., a local cache), set SCONECTL_REPO to the repo you want to use instead."
+  echo "repository (e.g., a local cache), set SCONECTL_REPO (=\"$SCONECTL_REPO\") to the repo you want to use instead."
   return
 }
 
@@ -144,6 +139,18 @@ if [  "${repo}" == "" ]; then
 fi
 export APP_IMAGE_REPO="${repo}"
 export RELEASE="$release"
+
+if [ -z "$APP_NAMESPACE" ] ; then
+    export APP_NAMESPACE="$RELEASE-$RANDOM-$RANDOM"
+    echo -e "export APP_NAMESPACE=$RELEASE-$RANDOM-$RANDOM\n" >> release.sh  
+else 
+    echo "CAS Namespace already defined: $APP_NAMESPACE"
+fi
+
+if [  "${RELEASE}" == "" ]; then
+    usage
+    error_exit  "Error: You must specify a release using ${release_flag}."
+fi
 
 # Check to make sure all prerequisites are installed
 ./check_prerequisites.sh

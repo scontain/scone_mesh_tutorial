@@ -1,6 +1,2 @@
-export RELEASE="pythonrelease"
-
-
-
-export APP_NAMESPACE=pythonrelease-12738-16756
+export APP_NAMESPACE=mesh-tutorial-15233-27450
 
