@@ -132,15 +132,44 @@ if ! kubectl get pods &> /dev/null
 then
     echo -e "${RED}It seems that you do not have access to a Kubernetes cluster!${NC}"
     echo -e "- ${ORANGE}Please ensure that you have access to a Kubernetes cluster${NC}"
+    error_exit
 fi
 
 
 echo -e "${BLUE}Checking that you have the local attestation service, the SGX Plugin, and the image pull secrets installed${NC}"
 #if ! sconectl scone_init &> /dev/null
-if ! ((kubectl get las | grep HEALTHY) && (kubectl get cas | grep HEALTHY) && (kubectl get sgxplugin | grep HEALTHY))
+if ! ((kubectl get las | grep HEALTHY) && (kubectl get sgxplugin | grep HEALTHY))
 then
     echo -e "${RED}It seems the Kubernetes cluster is not yet properly initialized!${NC}"
     echo -e "- ${ORANGE}1. Retrieve/create an access token https://sconedocs.github.io/registry/#create-an-access-token${NC}"
     echo -e "- ${ORANGE}2. Install the SCONE operator: https://sconedocs.github.io/2_operator_installation/"
     echo -e "- ${ORANGE}3. Install SGXPlugin, LAS, and CAS: https://sconedocs.github.io/4_quickstart/${NC}"
+    error_exit
 fi
+
+echo -e "${BLUE}Checking if the CAS '$CAS' in namespace '$CAS_NAMESPACE' is installed${NC}"
+if ! (kubectl get cas "$CAS" -n "$CAS_NAMESPACE" )
+then
+    echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not yet running!${NC}"
+    error_exit
+fi
+
+STATUS=$(kubectl get cas "$CAS" -n "$CAS_NAMESPACE"  --output=json | jq '.status.state' || echo "CAS NOT YET RUNNING")
+echo -e "${BLUE}Checking health status of CAS '$CAS' in namespace '$CAS_NAMESPACE' is installed${NC}"
+if ! [[ "$STATUS" == "\"HEALTHY\"" ]]
+then
+    echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not healthy: status is $STATUS${NC}"
+    echo -e "- ${ORANGE}- You can install cas as follows: kubectl provision cas $CAS $CAS_NAMESPACE -v${NC}"
+    error_exit
+fi
+
+echo -e "${BLUE}Checking health status of CAS '$CAS' in namespace '$CAS_NAMESPACE' is provisioned${NC}"
+
+if ! kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --is-provisioned
+then
+    echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not yet provisioned${NC}"
+    echo -e "- ${ORANGE}- You can provision this cas as follows: kubectl provision cas $CAS $CAS_NAMESPACE -v${NC}"
+    error_exit
+fi
+
+

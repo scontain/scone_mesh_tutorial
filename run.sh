@@ -33,10 +33,14 @@ verbose=""
 debug_flag="--debug"
 debug_short_flag="-d"
 debug=""
+cas_flag="--cas"
+cas_namespace_flag="--cas-namespace"
 
 ns="$DEFAULT_NAMESPACE"
 repo="$APP_IMAGE_REPO"
 release="$RELEASE"
+export CAS="cas"
+export CAS_NAMESPACE="default"
 
 error_exit() {
   trap '' EXIT
@@ -69,6 +73,10 @@ usage ()
   echo "                  Enable verbose output"
   echo "    $debug_flag | debug_short_flag"
   echo "                  Create debug image instead of a production image"
+  echo "    $cas_flag"
+  echo "                  Set the name of the CAS service that we should use. Default is $CAS"
+  echo "    $cas_namespace_flag"
+  echo "                  Set the namespace of the CAS service that we should use. Default is $CAS_NAMESPACE"
   echo "    $help_flag"
   echo "                  Output this usage information and exit."
   echo ""
@@ -115,6 +123,24 @@ while [[ "$#" -gt 0 ]]; do
     ${debug_flag} | ${debug_short_flag})
       debug="--mode=debug"
       shift # past argument
+      ;;
+    ${cas_flag})
+      export CAS="$2"
+      if [ ! -n "${CAS}" ]; then
+        usage
+        error_exit "Error: The cas name '$CAS' is invalid."
+      fi
+      shift # past argument
+      shift || true # past value
+      ;;
+    ${cas_namespace_flag})
+      export CAS_NAMESPACE="$2"
+      if [ ! -n "${CAS_NAMESPACE}" ]; then
+        usage
+        error_exit "Error: The cas namespace '$CAS_NAMESPACE' is invalid."
+      fi
+      shift # past argument
+      shift || true # past value
       ;;
     $help_flag)
       usage
@@ -175,6 +201,9 @@ SCONE="\$SCONE" envsubst < service.yaml.template > service.yaml
 
 sconectl apply -f service.yaml $verbose $debug
 
+echo -e "${BLUE}Determine the keys of CAS $CAS in namespace $CAS_NAMESPACE"
+
+source <(kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print_caskeys)
 
 echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
 echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"

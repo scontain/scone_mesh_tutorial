@@ -99,17 +99,17 @@ to which you want to deploy your Hello World application.
   service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
   service need to be installed in the default Kubernetes namespace. Note that if your Kubernetes config does not give you access to the default namespace, this will fail. In case of our workshops, please skip this step.
   
-  You can install them by running:
-      
+  You can install them by running (see [Installation Instructions](https://sconedocs.github.io/2_operator_installation/)):
+   
   ```bash
-  sconectl init
+  curl -fsSL https://raw.githubusercontent.com/scontain/SH/master/operator_controller | bash -s - --set-version 5.8.0-rc.1 --reconcile --update --secret-operator  --plugin --verbose  --username $REGISTRY_USERNAME --access-token $REGISTRY_ACCESS_TOKEN --email $REGISTRY_EMAIL
   ```
 
   You can check whether the two DaemonSets are installed by executing:
     
   ```bash
-  kubectl get daemonsets las -n default
-  kubectl get daemonsets scone-plugin-sgxdevplugin -n default
+  kubectl get las 
+  kubectl get sgxplugin
   ```
 
   > **NOTE:** If you are not authorized to use `default` Kubernetes namespace, you will have to ask somebody with access to install the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 

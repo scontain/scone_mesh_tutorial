@@ -1,2 +1,2 @@
-export APP_NAMESPACE=mesh-tutorial-15233-27450
+export APP_NAMESPACE=mesh-tutorial-21487-9117
 
