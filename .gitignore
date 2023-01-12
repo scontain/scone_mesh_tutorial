@@ -5,3 +5,4 @@ README.pdf
 service.yaml
 mesh.yaml
 mesh_out.yaml
+release.sh
