@@ -201,7 +201,7 @@ SCONE="\$SCONE" envsubst < service.yaml.template > service.yaml
 
 sconectl apply -f service.yaml $verbose $debug
 
-echo -e "${BLUE}Determine the keys of CAS $CAS in namespace $CAS_NAMESPACE"
+echo -e "${BLUE}Determine the keys of CAS instance '$CAS' in namespace '$CAS_NAMESPACE'"
 
 source <(kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys)
 

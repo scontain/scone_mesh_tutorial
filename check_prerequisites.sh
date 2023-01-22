@@ -48,16 +48,16 @@ then
 fi
 
 echo -e "${BLUE}Checking that we run applications with docker without sudo${NC}"
-if ! docker run -it --rm hello-world &> /dev/null
+if ! docker run --rm hello-world &> /dev/null
 then
     echo -e "${RED}Docker does not seem to run."
     echo -e "Please ensure that you can run docker without sudo: https://docs.docker.com/engine/install/linux-postinstall/." 
-    echo -e "Ensure that command 'docker run -it hello-world' runs without problems${NC}"
+    echo -e "Ensure that command 'docker run hello-world' runs without problems${NC}"
     error_exit
 fi
 
 echo -e "${BLUE}Checking that we can run container images for linux/amd64${NC}"
-if ! docker run --platform linux/amd64 -it --rm hello-world &> /dev/null
+if ! docker run --platform linux/amd64 --rm hello-world &> /dev/null
 then
     echo -e "${RED}Docker does not seem to support argument '--platform linux/amd64'"
     echo -e "Please ensure that you can run the latest version of docker (i.e.,  API version >= 1.40)" 
@@ -73,7 +73,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that you can pull the images ${NC}"
-if docker pull --platform linux/amd64 -it registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
+if ! docker pull --platform linux/amd64 registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
 then
     echo -e "${RED}Docker does NOT seem to be able to pull the required container images.${NC}"
     echo -e "- ${ORANGE}1. Register an account with your company email at https://gitlab.scontain.com/users/sign_up.${NC}"
@@ -84,11 +84,11 @@ then
 fi
 
 echo -e "${BLUE}Checking that we the CPU has all necessary CPU features enabled${NC}"
-if ! docker run --platform linux/amd64 -it --rm registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
+if ! docker run --platform linux/amd64 --rm registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
 then
     echo -e "${RED}Docker does not seem to support all CPU features.${NC}"
     echo -e "- ${ORANGE}Assuming you do not run on a modern Intel CPU. Please ensure that you pass the following options to qemu: -cpu qemu64,+ssse3,+sse3,+sse4.1,+sse4.2,+rdrand,+popcnt,+xsave,+aes${NC}" 
-    error_exit
+    warning "Sconfication will most likely fail! Please run in an Virtual Machine."
 fi
 
 echo -e "${BLUE}Checking that we have access to kubectl${NC}"
