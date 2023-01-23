@@ -9,7 +9,7 @@ export ORANGE='\e[33m'
 export NC='\e[0m' # No Color
 
 APP_NAMESPACE=""
-source release.sh || true # get release name
+source release.sh 2> /dev/null || true # get release name
 
 
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
@@ -189,8 +189,8 @@ docker inspect $SCONECTL_REPO/sconecli:latest > /dev/null 2> /dev/null || docker
 }
 
 
-echo -e "${BLUE}let's ensure that we build everything from scratch${NC}" 
-rm -rf target || echo -e "${ORANGE} Failed to delete target directory - ignoring this! ${NC}"
+# echo -e "${BLUE}let's ensure that we build everything from scratch${NC}" 
+# rm -rf target || echo -e "${ORANGE} Failed to delete target directory - ignoring this! ${NC}"
 
 
 echo -e  "${BLUE}build service image:${NC} apply -f service.yaml"
@@ -203,7 +203,7 @@ sconectl apply -f service.yaml $verbose $debug
 
 echo -e "${BLUE}Determine the keys of CAS instance '$CAS' in namespace '$CAS_NAMESPACE'"
 
-source <(kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys)
+source <(kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
 
 echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
 echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"
@@ -213,14 +213,9 @@ SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
 sconectl apply -f mesh.yaml --release "$RELEASE" $verbose $debug
 
-echo -e "${BLUE}Uninstalling application in case it was previously installed:${NC} helm uninstall ${namespace_args} ${RELEASE}"
-echo -e "${BLUE} - this requires that 'kubectl' gives access to a Kubernetes cluster${NC}"
+echo -e "${BLUE}install/upgrade application:${NC} helm install ${namespace_args} ${RELEASE} target/helm/"
 
-helm uninstall $namespace_arg ${release} 2> /dev/null || true
-
-echo -e "${BLUE}install application:${NC} helm install ${namespace_args} ${RELEASE} target/helm/"
-
-helm install $namespace_arg ${release} target/helm/
+helm upgrade --install $namespace_arg ${release} target/helm/
 
 echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${namespace_args} ${RELEASE}<TAB>"
 echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${namespace_args} ${RELEASE}"

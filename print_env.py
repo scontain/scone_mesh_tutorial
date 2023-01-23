@@ -26,7 +26,7 @@ print(f"The checksum of the original API_PASSWORD is '{pw_checksum}'")
 
 while True:
   new_user = os.environ.get('API_USER', None)
-  print(f"Hello, user '{new_user}'!", flush=True)
+  print(f"Hello! user '{new_user}'!", flush=True)
   if new_user != user:
      print("Integrity violation:" 
            f"The value of API_USER changed from '{user}' to '{new_user}'!")
