@@ -73,7 +73,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that you can pull the images ${NC}"
-if ! docker pull --platform linux/amd64 registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
+if ! docker pull --platform linux/amd64 $SCONECTL_REPO/check_cpufeatures:latest &> /dev/null
 then
     echo -e "${RED}Docker does NOT seem to be able to pull the required container images.${NC}"
     echo -e "- ${ORANGE}1. Register an account with your company email at https://gitlab.scontain.com/users/sign_up.${NC}"
@@ -84,7 +84,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that we the CPU has all necessary CPU features enabled${NC}"
-if ! docker run --platform linux/amd64 --rm registry.scontain.com/sconectl/check_cpufeatures:latest &> /dev/null
+if ! docker run --platform linux/amd64 --rm $SCONECTL_REPO/check_cpufeatures:latest &> /dev/null
 then
     echo -e "${RED}Docker does not seem to support all CPU features.${NC}"
     echo -e "- ${ORANGE}Assuming you do not run on a modern Intel CPU. Please ensure that you pass the following options to qemu: -cpu qemu64,+ssse3,+sse3,+sse4.1,+sse4.2,+rdrand,+popcnt,+xsave,+aes${NC}" 
