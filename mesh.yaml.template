@@ -6,13 +6,13 @@ cas:
     alias: ["image", "security", "access", "attestation"] # use alias in case CAS instance has multiple roles
     cas_url: $CAS_URL # cas.default  # exported as {{cas_cas_cas_url}}
     cas_key: $CAS_KEY
-    tolerance: "-G" # TCB out of date
+    tolerance: "--software-hardening-needed --insecure-configuration" # TCB out of date
     mode: EncryptedManifest
     cas_encryption_key: $CAS_SESSION_ENCRYPTION_KEY 
 
 policy:
   namespace: $APP_NAMESPACE    # namespace on CAS instance `cas`
-  tolerate: "outdated-tcb"
+  tolerate: "outdated-tcb, insecure-configuration,hyperthreading, insecure-igpu, software-hardening-needed"
 
 # define environment variables
 # - this is can be done for each individual service defined in the services section 
