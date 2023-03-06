@@ -38,7 +38,7 @@ cas_namespace_flag="--cas-namespace"
 
 ns="$DEFAULT_NAMESPACE"
 repo="$APP_IMAGE_REPO"
-release="$RELEASE"
+release="${RELEASE:=pythonapp}"
 export CAS="cas"
 export CAS_NAMESPACE="default"
 
@@ -217,5 +217,7 @@ echo -e "${BLUE}install/upgrade application:${NC} helm install ${namespace_args}
 
 helm upgrade --install $namespace_arg ${release} target/helm/
 
-echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${namespace_args} ${RELEASE}<TAB>"
-echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${namespace_args} ${RELEASE}"
+namespace_args=`kubectl get pods -o name |grep -w $RELEASE`
+
+echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${namespace_args}"
+echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE}"

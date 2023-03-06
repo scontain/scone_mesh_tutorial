@@ -14,6 +14,14 @@ if user is None or pw is None:
     print("Not all required environment variables are defined.")
     exit(1)
 
+release = os.environ.get('RELEASE', None)
+# Warn if RELEASE is not set up
+if release is None:
+    print("..:WRN:Either release has not been defined or it is default: pythonapp. Verify the installation.")
+    release = 'pythonapp'
+    print(f"..:WRN:'release' is now {release}.")
+print(f"..:INF:'release' is {release}.")
+
 # We can print API_USER, since it, unlike the API_PASSWORD, is not 
 # meant to be confidential.
 print(f"Hello, '{user}' - thanks for passing along the API_PASSWORD", 
@@ -43,6 +51,6 @@ while True:
            f"The checksum of API_PASSWORD changed from '{pw_checksum}' to '{new_pw_checksum}'!")
      exit(1)
 
-  print("Stop ME by executing 'helm uninstall pythonapp'", flush=True)
+  print(f"Stop ME by executing 'helm uninstall {release}'", flush=True)
   time.sleep(10)
 
