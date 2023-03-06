@@ -32,6 +32,8 @@ env:
         value: sconeapps
       - name: APP_SERVICE_PORT
         value: 443
+      - name: RELEASE
+        value: $RELEASE
 
 services:
   - name: pythonservice
