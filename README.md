@@ -555,30 +555,62 @@ Hence, since we didn't succeed in reverting to the username of version 1 without
 
 To verify the consistency protection of the **program**, we would have to create and deploy a new version of the application, i.e., version 2, which differs from version 1 in its program code. The malicious attack would try to revert to use the program code of version 1:
 
-1. Build and deploy version 2:
+1. Stop the services
+   ```bash
+   helm uninstall pythonapp
+   ```
+
+2. Clean previous working files and directories used to build the configuration
+   ```bash
+   sudo rm -rf release.sh target/
+   ```
+
+3. Build and deploy version 2:
    1. Create a new version, i.e., version 2, of the program by changing
    a log message printed in the loop in `print_env.py` in the repository.
-   2. Change the image tag in `service.yaml` under `build.to` to `2`.
-   3. Change the image tag in `mesh.yaml` under `services.image` to `2`.
+   2. Change the image tag in `service.yaml.template` under `build.to` to `2`.
+   3. Change the image tag in `mesh.yaml.template` under `services.image` to `2`.
    4. Build and deploy the new version, version 2, of the application:
 
       ```bash
       ./run.sh
       ```
 
-2. Verify that version 2 is running, by making sure the new log message is printed in the logs:
+4. Verify that version 2 is running, by making sure the new log message is printed in the logs:
 
    ```bash
    kubectl logs <pod name>
    ```
+   1. And assert the new image version:
+   ```bash
+   kubectl describe `kubectl get pods -o name |grep -w pythonapp` |grep -w 'Image:'
+   ```
+   ```yaml
+       Image:         <image registry>/<image name>:2
+   ```
 
-3. Maliciously try to deploy version 1 without it being detected:
+5. Maliciously try to deploy version 1 without it being detected:
+   > **NOTE** Assert that both version `1` and `2` have different hashes
+   ```bash
+   docker image ls |grep <image registry>/<image name>.*\ \ \ [12]\ \ \
+   ```
+   Example:
+   ```log
+   <image registry>/<image name>   2    5e54695872f6   4 minutes ago   175MB
+   <image registry>/<image name>   1    9daf78fdfb99   13 minutes ago   175MB
+   ```
+
    1. Push the image of version 1 to the registry under the tag `2`: 
 
       ```bash
       docker tag <image registry>/<image name>:1 <image registry>/<image name>:2
       docker push <image registry>/<image name>:2
       ```
+      1. Verify the images state again; you will see they have the same hash from version 2. Example:
+   ```log
+   <image registry>/<image name>   2    9daf78fdfb99   17 minutes ago   175MB
+   <image registry>/<image name>   1    9daf78fdfb99   17 minutes ago   175MB
+   ```
 
    2. Deploy the fake version 2:
 
@@ -587,7 +619,7 @@ To verify the consistency protection of the **program**, we would have to create
       helm install pythonapp target/helm 
       ```
 
-4. Verify that the program fails:
+6. Verify that the program fails:
 
    ```bash
    kubectl get pods
@@ -609,6 +641,22 @@ To verify the consistency protection of the **program**, we would have to create
        Error 2 of 2: Unexpected enclave measurement (MRENCLAVE, 51c22fa42b6970af6c44eceaab1ce7ef77385e0ddd8cb31cc4f018bcfb04d818) - Expected 0e62020589972fba3ae70225cf6cd958897bbdd5eee878c5badf5928d95cfaae
    Note: Connecting to CAS at edge.scone-cas.cf (port 18765) using service ID myPythonApp/pythonapp/python3
    ```
+
+You will also notice the POD does not load and keep trying to restart:
+```bash
+kubectl get pods -A -o wide |grep -w pythonapp |less
+```
+Example:
+```log
+default       pythonapp-pythonservice-95f7bd7c5-qxf82          0/1     CrashLoopBackOff   5 (82s ago)    4m40s  10.0.1.241       scontain1a-vm-sgx-3  <none>       <none>
+```
+
+7. Resume the service
+
+As the image was overwritten in the registry, only a new version can restore the sanity of the system
+
+Repeat steps **1.** through **3.** with incrementing by 1 the image version, _i.e._ to `3`.
+
 
 ## Troubleshooting
 
