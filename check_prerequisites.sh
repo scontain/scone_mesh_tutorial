@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+export VERSION=${VERSION:-latest}
 
 export RED='\e[31m'
 export BLUE='\e[34m'
@@ -51,7 +52,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that we run applications with docker without sudo${NC}"
-if ! docker run --rm hello-world &> /dev/null
+if ! docker run --platform linux/amd64 --rm hello-world &> /dev/null
 then
     echo -e "${RED}Docker does not seem to run."
     echo -e "Please ensure that you can run docker without sudo: https://docs.docker.com/engine/install/linux-postinstall/." 
@@ -76,7 +77,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that you can pull the images ${NC}"
-if ! docker pull --platform linux/amd64 $SCONECTL_REPO/check_cpufeatures:latest &> /dev/null
+if ! docker pull --platform linux/amd64 $SCONECTL_REPO/check_cpufeatures:${VERSION} &> /dev/null
 then
     echo -e "${RED}Docker does NOT seem to be able to pull the required container images.${NC}"
     echo -e "- ${ORANGE}1. Register an account with your company email at https://gitlab.scontain.com/users/sign_up.${NC}"
@@ -87,7 +88,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that we the CPU has all necessary CPU features enabled${NC}"
-if ! docker run --platform linux/amd64 -e SCONE_NO_TIME_THREAD=1 --rm $SCONECTL_REPO/check_cpufeatures:latest &> /dev/null
+if ! docker run --platform linux/amd64 -e SCONE_NO_TIME_THREAD=1 --rm $SCONECTL_REPO/check_cpufeatures:${VERSION} &> /dev/null
 then
     echo -e "${RED}Docker does not seem to support all CPU features.${NC}"
     echo -e "- ${ORANGE}Assuming you do not run on a modern Intel CPU. Please ensure that you pass the following options to qemu: -cpu qemu64,+ssse3,+sse3,+sse4.1,+sse4.2,+rdrand,+popcnt,+xsave,+aes${NC}" 

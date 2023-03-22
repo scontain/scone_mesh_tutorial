@@ -2,6 +2,7 @@
 
 set -e
 
+export VERSION=${VERSION:-latest}
 
 export RED='\e[31m'
 export BLUE='\e[34m'
@@ -80,8 +81,12 @@ usage ()
   echo "    $help_flag"
   echo "                  Output this usage information and exit."
   echo ""
-  echo "By default this uses the latest release of the SCONE Elements images. To use image from a different"
-  echo "repository (e.g., a local cache), set SCONECTL_REPO (=\"$SCONECTL_REPO\") to the repo you want to use instead."
+  echo "By default this uses the latest release of the SCONE Elements images: By setting environment variable"
+  echo "   export VERSION=\"<VERSION>\""
+  echo "you can select a different version. Currently selected version is $VERSION."
+  echo "To use image from a different repository (e.g., a local cache), set "
+  echo "   export SCONECTL_REPO (=\"$SCONECTL_REPO\")"
+  echo "to the repo you want to use instead. Currently selected repo is $SCONECTL_REPO."
   return
 }
 
@@ -191,8 +196,8 @@ done
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
-docker inspect $SCONECTL_REPO/sconecli:latest > /dev/null 2> /dev/null || docker pull $SCONECTL_REPO/sconecli:latest > /dev/null 2> /dev/null || { 
-    echo -e "${RED}You must get access to image `sconectl/sconecli:latest`.${NC}" 
+docker inspect $SCONECTL_REPO/sconecli:${VERSION} > /dev/null 2> /dev/null || docker pull $SCONECTL_REPO/sconecli:${VERSION} > /dev/null 2> /dev/null || { 
+    echo -e "${RED}You must get access to image `sconectl/sconecli:${VERSION}`.${NC}" 
     error_exit "Please send email info@scontain.com to ask for access"
 }
 
