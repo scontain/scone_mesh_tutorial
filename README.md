@@ -251,7 +251,7 @@ to build and run your confidential application on Kubernetes.
 > any missing requirements (see [Step 0](#step-0-requirements)) by 
 > calling `check_prerequisites.sh` and checks whether you have 
 > access rights to the SCONE docker image 
-> `registry.scontain.com/sconectl/sconecli:latest`.
+> `registry.scontain.com/sconectl/sconecli:$VERSION`.
 > If the latter fails, check the
 > [troubleshooting section](#not-allowed-to-pull-from-scone-registry)
 > on what to do.
