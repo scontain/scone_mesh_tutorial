@@ -141,7 +141,7 @@ fi
 
 
 echo -e "${BLUE}Checking that you have the local attestation service, the SGX Plugin, and the image pull secrets installed${NC}"
-if ! ((kubectl get las | grep HEALTHY) && (kubectl get cas | grep HEALTHY) && (kubectl get sgxplugin | grep HEALTHY))
+if ! ((kubectl get las | grep HEALTHY) && (kubectl get sgxplugin | grep HEALTHY))
 then
     echo -e "${RED}It seems the Kubernetes cluster is not yet properly initialized!${NC}"
     echo -e "- ${ORANGE}1. Retrieve/create an access token https://sconedocs.github.io/registry/#create-an-access-token${NC}"
