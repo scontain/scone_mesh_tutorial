@@ -160,10 +160,13 @@ else
 fi
 
 if [  "${repo}" == "" ]; then
-    usage
-    error_exit  "Error: You must specify a repo."
+    if [ "$APP_IMAGE_REPO" == "" ]; then
+       usage
+       error_exit  "Error: You must specify a repo."
+    fi
+else
+    export APP_IMAGE_REPO="${APP_IMAGE_REPO:-$repo}"
 fi
-export APP_IMAGE_REPO="${repo}"
 export RELEASE="$release"
 
 if [ -z "$APP_NAMESPACE" ] ; then
@@ -179,7 +182,12 @@ if [  "${RELEASE}" == "" ]; then
 fi
 
 # Check to make sure all prerequisites are installed
-./check_prerequisites.sh
+a=0
+while ! ./check_prerequisites.sh; do
+    sleep 10;
+    a=$[a+1];
+    test $a -eq 10 && exit 1 || true;
+done
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
