@@ -15,7 +15,7 @@ source release.sh 2> /dev/null || true # get release name
 
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
 export APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
-export SCONECTL_REPO=${SCONECTL_REPO:-"registry.scontain.com/sconectl"}
+export SCONECTL_REPO=${SCONECTL_REPO:-"registry.scontain.com/cicd"}
 
 # print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
@@ -202,10 +202,11 @@ cat > build_incontainer.sh  <<EOF
 #!/usr/bin/env bash
 
 set -e -x
+export SCONECTL_REPO="$SCONECTL_REPO"
 # create confidential service image
-apply -f service.yaml $verbose $debug
+apply -f service.yaml $verbose $debug  --set-version ${VERSION}
 # create confidential mesh
-apply -f mesh.yaml --release "$RELEASE" $verbose $debug
+apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION}
 # copy generated helm chart
 echo Copy target/helm to helm repo
 EOF

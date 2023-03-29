@@ -736,3 +736,7 @@ We can show which variables must be defined in a `meshfile` using option `-p`:
 ```bash
 sconectl apply -f mesh.yaml -p
 ```
+
+## Building without `sconectl`
+
+`sconectl` is a wrapper for a container that contains the SCONE tools. In case you want to use `sconectl` in a CICD pipeline, this can cause problems since one might not know the absolute path of the files that one needs to map into the containers. We show with the help of script `build.sh` on how to build confidential container images in which no volumes need to be mapped. Note that we still use Docker-in-Docker (but using no `-v`)
