@@ -25,7 +25,7 @@ trap 'if [ $? -ne 0 ]; then echo -e "${RED}\"${last_command}\" command failed - 
 help_flag="--help"
 ns_flag="--namespace"
 ns_short_flag="-n"
-repo_flag="--image_repo"
+repo_flag="--image-repo"
 repo_short_flag="-i"
 verbose_flag="-v"
 verbose=""
@@ -73,7 +73,7 @@ usage ()
   echo "                    export APP_IMAGE_REPO=\"$APP_IMAGE_REPO\""
   echo "    $verbose_flag"
   echo "                  Enable verbose output"
-  echo "    $debug_flag | debug_short_flag"
+  echo "    $debug_flag | $debug_short_flag"
   echo "                  Create debug image instead of a production image"
   echo "    $cas_flag"
   echo "                  Set the name of the CAS service that we should use. Default is $CAS"
@@ -224,17 +224,16 @@ SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
 sconectl apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION}
 
-echo -e "${BLUE}install/upgrade application:${NC} helm install ${namespace_args} ${RELEASE} target/helm/"
+echo -e "${BLUE}install/upgrade application:${NC} helm install ${namespace_arg} ${RELEASE} target/helm/"
 
 helm upgrade --install $namespace_arg ${release} target/helm/
 
-namespace_args=`kubectl get pods -o name |grep -w $RELEASE`
+pod_name=`kubectl get pods ${namespace_arg} -o name |grep -w $RELEASE`
 
-echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${namespace_args}"
-echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE}"
+echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${pod_name} ${namespace_arg}"
+echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE} ${namespace_arg}"
 
-# check_pods uses environment variables  NAMESPACE, RELEASE, and APP_NAME
-#  - NAMESPACE and RELEASE are already set
+# check_pods uses environment variables  ns, RELEASE, and APP_NAME
+#  - ns and RELEASE are already set
 
 APP_NAME="pythonservice" ./check_pods.sh
-
