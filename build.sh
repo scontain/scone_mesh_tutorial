@@ -194,7 +194,7 @@ SCONE="\$SCONE" envsubst < service.yaml.template > service.yaml
 
 echo kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys
 
-source <(kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
+source <(VERSION="" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
 
 SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
