@@ -3,6 +3,7 @@
 set -e
 
 export VERSION=${VERSION:-latest}
+export CAS_VERSION=${CAS_VERSION:-$VERSION}
 
 export RED='\e[31m'
 export BLUE='\e[34m'
@@ -216,7 +217,7 @@ sconectl apply -f service.yaml $verbose $debug  --set-version ${VERSION}
 
 echo -e "${BLUE}Determine the keys of CAS instance '$CAS' in namespace '$CAS_NAMESPACE'"
 
-source <(VERSION="" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
+source <(VERSION="$CAS_VERSION" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
 
 echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
 echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"
@@ -235,6 +236,9 @@ namespace_args=`kubectl get pods -o name |grep -w $RELEASE`
 
 echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${namespace_args}"
 echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE}"
+
+# check_pods uses environment variables  NAMESPACE, RELEASE, and APP_NAME
+#  - NAMESPACE and RELEASE are already set
 
 APP_NAME="pythonservice" ./check_pods.sh
 
