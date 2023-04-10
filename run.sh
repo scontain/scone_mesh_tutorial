@@ -188,12 +188,8 @@ if [  "${RELEASE}" == "" ]; then
 fi
 
 # Check to make sure all prerequisites are installed
-a=0
-while ! ./check_prerequisites.sh; do
-    sleep 10;
-    a=$[a+1];
-    test $a -eq 10 && exit 1 || true;
-done
+
+./check_prerequisites.sh
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
