@@ -3,6 +3,7 @@
 set -e -x
 
 export VERSION=${VERSION:-latest}
+export CAS_VERSION=${CAS_VERSION:-$VERSION}
 
 export RED='\e[31m'
 export BLUE='\e[34m'
@@ -194,7 +195,7 @@ SCONE="\$SCONE" envsubst < service.yaml.template > service.yaml
 
 echo kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys
 
-source <(VERSION="" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
+source <(VERSION="$CAS_VERSION" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
 
 SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
