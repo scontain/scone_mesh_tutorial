@@ -234,6 +234,6 @@ echo -e "${BLUE}Check the logs by executing:${NC} kubectl logs ${pod_name} ${nam
 echo -e "${BLUE}Uninstall by executing:${NC} helm uninstall ${RELEASE} ${namespace_arg}"
 
 # check_pods uses environment variables  ns, RELEASE, and APP_NAME
-#  - ns and RELEASE are already set
+#  - ns and RELEASE are already set (but ns is not exported)
 
-APP_NAME="pythonservice" ./check_pods.sh
+ns=$ns APP_NAME="pythonservice" ./check_pods.sh
