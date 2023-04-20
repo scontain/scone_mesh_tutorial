@@ -17,6 +17,8 @@ environment:
       value: "$$SCONE::password$$"  # get from CAS
     - name: RELEASE
       value: $RELEASE
+    - name: EXCLAIM
+      value: "what!"  # get from CAS
   global:     # values defined/overwritten in Meshfile
     - name: API_USER  # get value from Meshfile
 
@@ -26,6 +28,9 @@ secrets:
   - name: password
     kind: ascii
     size: 10
+  - name: xpassword
+    kind: ascii
+    value: "NOPE!"
 
 
 build:
