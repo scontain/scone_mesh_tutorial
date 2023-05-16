@@ -37,6 +37,9 @@ debug_short_flag="-d"
 debug=""
 cas_flag="--cas"
 cas_namespace_flag="--cas-namespace"
+no_check_flag="--no-check"
+
+do_check_prereqs=1
 
 ns="$DEFAULT_NAMESPACE"
 repo="$APP_IMAGE_REPO"
@@ -79,6 +82,8 @@ usage ()
   echo "                  Set the name of the CAS service that we should use. Default is $CAS"
   echo "    $cas_namespace_flag"
   echo "                  Set the namespace of the CAS service that we should use. Default is $CAS_NAMESPACE"
+  echo "    $no_check_flag"
+  echo "                  Skip verifying that the pre-requisites are satisfied."
   echo "    $help_flag"
   echo "                  Output this usage information and exit."
   echo ""
@@ -124,6 +129,10 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     ${verbose_flag})
       verbose="-vvvvvvvv"
+      shift # past argument
+      ;;
+    ${no_check_flag})
+      do_check_prereqs=0
       shift # past argument
       ;;
     ${debug_flag} | ${debug_short_flag})
@@ -189,7 +198,9 @@ fi
 
 # Check to make sure all prerequisites are installed
 
-./check_prerequisites.sh
+if [[ $do_check_prereqs == 1 ]]; then
+    ./check_prerequisites.sh
+fi
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
 
