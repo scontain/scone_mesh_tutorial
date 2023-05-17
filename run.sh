@@ -74,6 +74,10 @@ usage ()
   echo "                  Container image repository to use for pushing the generated confidential image"
   echo "                  Default value is defined by environment variable:"
   echo "                    export APP_IMAGE_REPO=\"$APP_IMAGE_REPO\""
+  echo "    $scone_cloud_repo_flag"
+  echo "                  Container image repository to use for pulling the SCONE images (other than sconectl)."
+  echo "                  Default value is defined by environment variable:"
+  echo "                    export SCONE_CLOUD_REPO=\"$SCONE_CLOUD_REPO\""
   echo "    $verbose_flag"
   echo "                  Enable verbose output"
   echo "    $debug_flag | $debug_short_flag"
@@ -114,6 +118,15 @@ while [[ "$#" -gt 0 ]]; do
       if [ ! -n "${repo}" ]; then
         usage
         error_exit "Error: The repo name '$repo' is invalid."
+      fi
+      shift # past argument
+      shift || true # past value
+      ;;
+    ${scone_cloud_repo_flag})
+      scone_cloud_repo="$2"
+      if [ ! -n "${scone_cloud_repo}" ]; then
+        usage
+        error_exit "Error: The repo name '$scone_cloud_repo' is invalid."
       fi
       shift # past argument
       shift || true # past value
@@ -182,6 +195,13 @@ if [  "${repo}" == "" ]; then
 else
     export APP_IMAGE_REPO="${APP_IMAGE_REPO:-$repo}"
 fi
+if [  "${scone_cloud_repo}" == "" ]; then
+    if [ "$SCONE_CLOUD_REPO" == "" ]; then
+        SCONE_CLOUD_REPO="registry.scontain.com/scone.cloud"
+    fi
+    scone_cloud_repo="$SCONE_CLOUD_REPO"
+fi
+export SCONE_CLOUD_REPO="$scone_cloud_repo"
 export RELEASE="$release"
 
 if [ -z "$APP_NAMESPACE" ] ; then
@@ -199,7 +219,7 @@ fi
 # Check to make sure all prerequisites are installed
 
 if [[ $do_check_prereqs == 1 ]]; then
-    ./check_prerequisites.sh
+    SCONE_CLOUD_REPO="$SCONE_CLOUD_REPO" ./check_prerequisites.sh
 fi
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
@@ -224,7 +244,7 @@ sconectl apply -f service.yaml $verbose $debug  --set-version ${VERSION}
 
 echo -e "${BLUE}Determine the keys of CAS instance '$CAS' in namespace '$CAS_NAMESPACE'"
 
-source <(VERSION="$CAS_VERSION" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
+source <(VERSION="$CAS_VERSION" IMAGE_REPO="$SCONE_CLOUD_REPO" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
 
 echo -e "${BLUE}build application and pushing policies:${NC} apply -f mesh.yaml"
 echo -e "${BLUE}  - this fails, if you do not have access to the SCONE CAS namespace"

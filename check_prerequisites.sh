@@ -169,7 +169,10 @@ fi
 
 echo -e "${BLUE}Checking health status of CAS '$CAS' in namespace '$CAS_NAMESPACE' is provisioned${NC}"
 
-if ! VERSION="$CAS_VERSION" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --is-provisioned
+if [[ "$SCONE_CLOUD_REPO" == "" ]]; then
+    SCONE_CLOUD_REPO="regitsry.scontain.com/scone.cloud"
+fi
+if ! VERSION="$CAS_VERSION" IMAGE_REPO="$SCONE_CLOUD_REPO" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --is-provisioned
 then
     echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not yet provisioned${NC}"
     echo -e "- ${ORANGE}- You can provision this cas as follows: kubectl provision cas $CAS $CAS_NAMESPACE -v${NC}"
