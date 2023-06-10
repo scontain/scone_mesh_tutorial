@@ -13,7 +13,10 @@ cas:
 policy:
   namespace: $APP_NAMESPACE    # namespace on CAS instance `cas`
   tolerate: "outdated-tcb, insecure-configuration,hyperthreading, insecure-igpu, software-hardening-needed, aepic-leak"
+# To ignore all security advisories, uncomment the following line:
   ignore_advisories: "*"
+# To be more precise regarding the advisories, i.e., instead of ignoring all advisories by specifying "*",
+# one can present a list of advisories as follows:
 #  ignore_advisories: "INTEL-SA-00586, INTEL-SA-00614, INTEL-SA-00615, INTEL-SA-00730, INTEL-SA-00738, INTEL-SA-00767"
 
 # define environment variables
