@@ -18,7 +18,9 @@ environment:
     - name: RELEASE
       value: $RELEASE
     - name: EXCLAIM
-      value: "what!"  # get from CAS
+      value: "!what!"  # get from CAS
+    - name: XPASSWORD
+      value: "$$SCONE::xpassword$$"  # get from CAS
   global:     # values defined/overwritten in Meshfile
     - name: API_USER  # get value from Meshfile
 
@@ -30,7 +32,7 @@ secrets:
     size: 10
   - name: xpassword
     kind: ascii
-    value: "NOPE!"
+    value: "#NOPE!"
 
 
 build:
