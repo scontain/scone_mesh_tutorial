@@ -117,6 +117,7 @@ cas:
 
 policy:
   namespace: myPythonApp    # namespace on CAS instance `cas`
+  ignore_advisories: "*"
 
 # define environment variables   
 env:

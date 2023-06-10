@@ -89,7 +89,7 @@ then
 fi
 
 echo -e "${BLUE}Checking that we the CPU has all necessary CPU features enabled${NC}"
-if ! docker run --platform linux/amd64 -e SCONE_NO_TIME_THREAD=1 --rm $SCONECTL_REPO/check_cpufeatures:${VERSION} &> /dev/null
+if ! docker run --platform linux/amd64 -e SCONE_PRODUCTION=0 -e SCONE_NO_TIME_THREAD=1 --rm $SCONECTL_REPO/check_cpufeatures:${VERSION} &> /dev/null
 then
     echo -e "${RED}Docker does not seem to support all CPU features.${NC}"
     echo -e "- ${ORANGE}Assuming you do not run on a modern Intel CPU. Please ensure that you pass the following options to qemu: -cpu qemu64,+ssse3,+sse3,+sse4.1,+sse4.2,+rdrand,+popcnt,+xsave,+aes${NC}" 
