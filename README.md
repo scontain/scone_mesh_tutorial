@@ -1,5 +1,18 @@
 # Confidential Hello World!
 
+## TL'DR
+
+```bash
+# define REPO to which you are permitted to push container images
+REPO="<YOUR-REPO>" 
+# cleanup the last state
+rm -rf release.sh target
+# execute all steps of this tutorial 
+./run.sh -i "$REPO" --release secure-doc-management -v
+```
+
+## Introduction
+
 In this tutorial, we show how to provide a simple cloud-native application with a secret such that **nobody** (except for the program itself) can access the secret. In fact, not even users with root privileges and cloud providers with hardware access can access it or modify the program.
 
 > **NOTE:** If you want to skip the introductory explanations, you can jump straight to the [**Quick Start Guide**](#quick-start-guide).
