@@ -130,6 +130,12 @@ to which you want to deploy your Hello World application.
   service. 
   > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights.
 
+  - You also need a CAS on your Kubernetes cluster. Which you can install with the [Kubectl provision plugin](https://sconedocs.github.io/5_kubectl/) and exectuing:
+
+   ```bash
+   kubectl provision cas <name> -v
+   ```
+
 
 ### Step 1: Write the Services of Your Application
 
@@ -198,14 +204,9 @@ and a *mesh manifest file* (a.k.a. *meshfile*) for your application.
 In this `Hello World` example, this amounts to just two files which
 have already been created for you. You just need to:
 
-1. Change the `build.to` field in the provided `service.yaml` file to point to
-the repository and image name, to which you want to upload the generated
-container image containing the service. To make it easier to follow
-the steps below, we recommend using the image tag `1`.
-2. Change the `services.image` field in the `mesh.yaml` file to point to the same
-image as in the `service.yaml` file.
-3. Change the `policy.namespace` field in the `mesh.yaml` file to a unique
-[SCONE CAS namespace](https://sconedocs.github.io/namespace/) of your choice.
+ - Specify an image repository where you can store the generated, confidential image: pass this along to the run.sh script with argument --image-repo <REPO>.
+
+ - Optionally, change the Kubernetes namespace by passing argument --namespace <kubernetes-namespace> to the run script.
 
 > **NOTE:** A *service manifest file* is a `yaml` file, in which you describe the
 service by specifying different properties. These include but are not limited to:
@@ -232,7 +233,7 @@ service by specifying different properties. These include but are not limited to
 
 ### Step 3: Build and Deploy Your Application
 
-Once you have created your manifest files, you only need to run:
+Execute the following command:
 
 ```bash
 ./run.sh
@@ -240,6 +241,7 @@ Once you have created your manifest files, you only need to run:
 to build and run your confidential application on Kubernetes.
 
 > **NOTE:** Under the hood `run.sh` executes the following three commands:
+>
 > 1. Build the OCI container images containing your services and push it to your 
 > repository by executing the following command (once per service):
 >
@@ -255,6 +257,7 @@ to build and run your confidential application on Kubernetes.
 >   in the current directory on your local machine.
 >     - generate the security policies and global variables and upload them to the 
 >   SCONE CAS instance specified in the `mesh.yaml` file.
+>
 > 3. Deploy the application using the generated helm chart:
 >   ```bash
 >   helm install pythonapp target/helm
@@ -578,12 +581,12 @@ To verify the consistency protection of the **program**, we would have to create
    sudo rm -rf release.sh target/
    ```
 
-3. Build and deploy version 2:
-   1. Create a new version, i.e., version 2, of the program by changing
+3. Build and deploy version 2 by:
+   1. Creating a new version, i.e., version 2, of the program by changing
    a log message printed in the loop in `print_env.py` in the repository.
-   2. Change the image tag in `service.yaml.template` under `build.to` to `2`.
-   3. Change the image tag in `mesh.yaml.template` under `services.image` to `2`.
-   4. Build and deploy the new version, version 2, of the application:
+   2. Changing the image tag in `service.yaml.template` under `build.to` to `2`.
+   3. Changing the image tag in `mesh.yaml.template` under `services.image` to `2`.
+   4. Building and deploying the new version, version 2, of the application by running the following script:
 
       ```bash
       ./run.sh
