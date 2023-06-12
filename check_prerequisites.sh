@@ -7,6 +7,7 @@ export CAS_VERSION=${CAS_VERSION:-$VERSION}
 export RED='\e[31m'
 export BLUE='\e[34m'
 export ORANGE='\e[33m'
+export GREEN="\e[32m"
 export NC='\e[0m' # No Color
 
 export SCONECTL_REPO=${SCONECTL_REPO:="registry.scontain.com/sconectl"}
@@ -155,6 +156,7 @@ echo -e "${BLUE}Checking if the CAS '$CAS' in namespace '$CAS_NAMESPACE' is inst
 if ! (kubectl get cas "$CAS" -n "$CAS_NAMESPACE" )
 then
     echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not yet running!${NC}"
+    echo -e "- ${ORANGE}- You can install a cas as follows: kubectl provision cas $CAS $CAS_NAMESPACE -v${NC}"
     error_exit
 fi
 
@@ -177,4 +179,4 @@ then
     error_exit
 fi
 
-
+echo -e "${GREEN}All prerequisites met${NC}"
