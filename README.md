@@ -130,7 +130,9 @@ to which you want to deploy your Hello World application.
   service. 
   > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights.
 
-  - You also need a CAS on your Kubernetes cluster. Which you can install with the [Kubectl provision plugin](https://sconedocs.github.io/5_kubectl/) and exectuing:
+  - You will also need a CAS on your Kubernetes cluster. In case of our workshops, please skip this step.
+  
+  You can install a CAS on your cluster with the [Kubectl provision plugin](https://sconedocs.github.io/5_kubectl/) and running:
 
    ```bash
    kubectl provision cas <name> -v
