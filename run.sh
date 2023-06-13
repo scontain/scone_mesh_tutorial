@@ -192,6 +192,7 @@ fi
 ./check_prerequisites.sh
 
 echo -e "${BLUE}Checking that we have access to the base container image${NC}"
+echo -e "${BLUE}If you don't have the image, it will be pulled. This will take some time.${NC}"
 
 docker inspect $SCONECTL_REPO/sconecli:${VERSION} > /dev/null 2> /dev/null || docker pull $SCONECTL_REPO/sconecli:${VERSION} > /dev/null 2> /dev/null || { 
     echo -e "${RED}You must get access to image `${SCONECTL_REPO}/sconecli:${VERSION}`.${NC}" 
