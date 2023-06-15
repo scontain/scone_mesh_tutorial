@@ -110,7 +110,7 @@ to which you want to deploy your Hello World application.
 
 - On your Kubernetes cluster, the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
   service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
-  service need to be installed in the default Kubernetes namespace. Note that if your Kubernetes config does not give you access to the default namespace, this will fail. In case of our workshops, please skip this step.
+  service need to be installed . 
   
   You can install them by running (see [Installation Instructions](https://sconedocs.github.io/2_operator_installation/)):
    
@@ -130,12 +130,10 @@ to which you want to deploy your Hello World application.
   service. 
   > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights.
 
-  - You will also need a CAS on your Kubernetes cluster. In case of our workshops, please skip this step.
-  
-  You can install a CAS on your cluster with the [Kubectl provision plugin](https://sconedocs.github.io/5_kubectl/) and running:
+  - You will also need access to a CAS running in your kubernetes cluster for the course of this tutorial. If you do not yet have access to one, you can create a CAS using our kubectl plugin kubectl provision:
 
    ```bash
-   kubectl provision cas <name> -v
+   kubectl provision cas <cas name> -n <cas namespace> --verbose 
    ```
 
 
@@ -206,9 +204,9 @@ and a *mesh manifest file* (a.k.a. *meshfile*) for your application.
 In this `Hello World` example, this amounts to just two files which
 have already been created for you. You just need to:
 
- - Specify an image repository where you can store the generated, confidential image: pass this along to the run.sh script with argument --image-repo <REPO>.
+ - Specify an image repository where you can store the generated, confidential image: pass this along to the run.sh script with argument --image-repo <REPO>, or by setting the environment variable APP_IMAGE_REPO..
 
- - Optionally, change the Kubernetes namespace by passing argument --namespace <kubernetes-namespace> to the run script.
+ - Optionally, change the Kubernetes namespace by passing argument --namespace <kubernetes-namespace> to the run script. This will be the namespace where the application will be deployed. --cas and --cas-namespace can be used to specify the CAS to use for the application and the namespace for the CAS.
 
 > **NOTE:** A *service manifest file* is a `yaml` file, in which you describe the
 service by specifying different properties. These include but are not limited to:
