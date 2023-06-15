@@ -118,14 +118,14 @@ to which you want to deploy your Hello World application.
   curl -fsSL https://raw.githubusercontent.com/scontain/SH/master/operator_controller | bash -s - --set-version 5.8.0-rc.1 --reconcile --update --secret-operator  --plugin --verbose  --username $REGISTRY_USERNAME --access-token $REGISTRY_ACCESS_TOKEN --email $REGISTRY_EMAIL
   ```
 
-  You can check whether the two DaemonSets are installed by executing:
+  You can check whether the two custom resources are installed by executing:
     
   ```bash
   kubectl get las 
   kubectl get sgxplugin
   ```
 
-  > **NOTE:** If you are not authorized to use `default` Kubernetes namespace, you will have to ask somebody with access to install the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
+  > **NOTE:** If you are not authorized to install the services, you will have to ask somebody with access to install the [SCONE SGX Plugin](https://sconedocs.github.io/helm_sgxdevplugin/) 
   service and the [SCONE LAS](https://sconedocs.github.io/helm_las/)
   service. 
   > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights.
