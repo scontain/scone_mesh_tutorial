@@ -156,7 +156,7 @@ echo -e "${BLUE}Checking if the CAS '$CAS' in namespace '$CAS_NAMESPACE' is inst
 if ! (kubectl get cas "$CAS" -n "$CAS_NAMESPACE" )
 then
     echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not yet running!${NC}"
-    echo -e "- ${ORANGE}- You can install a cas as follows: kubectl provision cas $CAS $CAS_NAMESPACE -v${NC}"
+    echo -e "- ${ORANGE}- You can install a cas as f    ollows: kubectl provision cas $CAS -n $CAS_NAMESPACE -v${NC}"
     error_exit
 fi
 
@@ -166,7 +166,7 @@ if ! [[ "$STATUS" == "\"HEALTHY\"" ]]
 then
     echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not healthy: status is $STATUS${NC}"
     echo -e "- ${ORANGE}- The CAS might be in a working state anyhow. We are exiting this code anyhow.${NC}"
-    echo -e "- ${ORANGE}- You can install a cas as follows: kubectl provision cas $CAS $CAS_NAMESPACE -v${NC}"
+    echo -e "- ${ORANGE}- You can install a cas as follows: kubectl provision cas $CAS -n $CAS_NAMESPACE -v${NC}"
     error_exit
 fi
 

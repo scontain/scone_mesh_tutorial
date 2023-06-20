@@ -88,6 +88,9 @@ usage ()
   echo "To use image from a different repository (e.g., a local cache), set "
   echo "   export SCONECTL_REPO (=\"$SCONECTL_REPO\")"
   echo "to the repo you want to use instead. Currently selected repo is $SCONECTL_REPO."
+  echo "By default this uses the latest release of the CAS: By setting environment variable"
+  echo "   export CAS_VESION=\"<CAS_VERSION>\""
+  echo "you can select a different version. Currently selected version is $CAS_VERSION."
   return
 }
 
