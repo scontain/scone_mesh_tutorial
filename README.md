@@ -130,11 +130,12 @@ to which you want to deploy your Hello World application.
   service. 
   > Although all the `kubectl` (as well as the `helm` and `run.sh`) commands in the rest of this tutorial also are using the `default` namespace, you can in those cases use the corresponding command line options for specifying another namespace, where you do have access rights.
 
-  - You will also need access to a CAS running in your kubernetes cluster for the course of this tutorial. If you do not yet have access to one, you can create a CAS using our kubectl plugin kubectl provision:
+- You will also need access to a CAS running in your kubernetes cluster for the course of this
+  tutorial. If you do not yet have access to one, you can create a CAS using our kubectl plugin kubectl provision:
 
-   ```bash
-   kubectl provision cas <cas name> -n <cas namespace> --verbose 
-   ```
+  ```bash
+  kubectl provision cas <cas name> -n <cas namespace> --verbose 
+  ```
 
 
 ### Step 1: Write the Services of Your Application
@@ -204,7 +205,7 @@ and a *mesh manifest file* (a.k.a. *meshfile*) for your application.
 In this `Hello World` example, this amounts to just two files which
 have already been created for you. You just need to:
 
- - Specify an image repository where you can store the generated, confidential image: pass this along to the run.sh script with argument --image-repo <REPO>, or by setting the environment variable APP_IMAGE_REPO..
+ - Specify an image repository where you can store the generated, confidential image: pass this along to the `run.sh` script with argument `--image-rep <REPO>`, or by setting the environment variable `APP_IMAGE_REPO`..
 
  - Optionally, change the Kubernetes namespace by passing argument --namespace <kubernetes-namespace> to the run script. This will be the namespace where the application will be deployed. --cas and --cas-namespace can be used to specify the CAS to use for the application and the namespace for the CAS.
 
@@ -271,6 +272,8 @@ to build and run your confidential application on Kubernetes.
 > If the latter fails, check the
 > [troubleshooting section](#not-allowed-to-pull-from-scone-registry)
 > on what to do.
+
+> **NOTE:** If you want to see more options, execute `./run.sh --help`.
 
 **Congratulations! You made it!** You now have the confidential `Hello World` application running on your Kubernetes cluster.
 
