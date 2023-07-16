@@ -18,7 +18,16 @@ environment:
     - name: RELEASE
       value: $RELEASE
     - name: EXCLAIM
-      value: "!what!"  # get from CAS
+      value: "!#what!$#" # includes comments and shell $ stuff 
+    - name: DISCLAIMER
+      value: 8|+
+          You can provide long text using standard yaml features
+           - that might contain multiple lines
+           - that might contain special characters like # or // and $
+           - even the first line can start with a space, in this example 2 spaces
+           - that can have a newline at the end or or not
+           - in this example it ends with an additional empty line, i.e., \n
+        
     - name: XPASSWORD
       value: "$$SCONE::xpassword$$"  # get from CAS
   global:     # values defined/overwritten in Meshfile
