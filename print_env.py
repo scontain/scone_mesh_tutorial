@@ -11,6 +11,7 @@ user = os.environ.get('API_USER', None)
 pw = os.environ.get('API_PASSWORD', None)
 # Retrieve some explicitly defined secret:
 exclaim = os.environ.get('EXCLAIM', None)
+disclaimer = os.environ.get('DISCLAIMER', None)
 # Retrieve some secret define in the service file:
 xpassword = os.environ.get('XPASSWORD', None)
 # Exit with error if either one is not defined in service.yaml.
