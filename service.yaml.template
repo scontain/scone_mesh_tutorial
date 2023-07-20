@@ -42,7 +42,8 @@ secrets:
           that might contain multiple lines
           that might contain special characters like
           even the first line can start with a space, in this example 2 spaces
-          that can have a newline at the end or or not
+          that can have a newline at the end or not and we can use special characters like $ and # 
+          and character # is not considered to be a comment within blocks
           in this example it ends with an additional empty line, i.e., \n
 
 build:
