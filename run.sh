@@ -2,7 +2,7 @@
 
 set -e
 
-export VERSION=${VERSION:-latest}
+export VERSION=${VERSION:-5.8.0}
 export CAS_VERSION=${CAS_VERSION:-$VERSION}
 
 export RED='\e[31m'
