@@ -8,7 +8,7 @@ REPO="<YOUR-REPO>"
 # cleanup the last state
 rm -rf release.sh target
 # execute all steps of this tutorial 
-./run.sh -i "$REPO" --release secure-doc-management -v
+./run.sh -i "$REPO" --release hello-user -v
 ```
 
 ## Introduction
@@ -115,7 +115,7 @@ to which you want to deploy your Hello World application.
   You can install them by running (see [Installation Instructions](https://sconedocs.github.io/2_operator_installation/)):
    
   ```bash
-  curl -fsSL https://raw.githubusercontent.com/scontain/SH/master/operator_controller | bash -s - --set-version 5.8.0-rc.1 --reconcile --update --secret-operator  --plugin --verbose  --username $REGISTRY_USERNAME --access-token $REGISTRY_ACCESS_TOKEN --email $REGISTRY_EMAIL
+  curl -fsSL https://raw.githubusercontent.com/scontain/SH/master/operator_controller | bash -s - --set-version 5.8.0 --reconcile --update --secret-operator  --plugin --verbose  --username $REGISTRY_USERNAME --access-token $REGISTRY_ACCESS_TOKEN --email $REGISTRY_EMAIL
   ```
 
   You can check whether the two custom resources are installed by executing:
@@ -135,6 +135,9 @@ to which you want to deploy your Hello World application.
 
   ```bash
   kubectl provision cas <cas name> -n <cas namespace> --verbose 
+  # Wait for the CAS to be healthy. You can use the following command:
+  watch -n2 kubectl get cas <cas name> -n <cas namespace>
+  # If there was an attestation error, running provision command again can fix the error state.
   ```
 
 
