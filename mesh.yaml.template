@@ -43,4 +43,5 @@ env:
 services:
   - name: pythonservice
     image: $APP_IMAGE_REPO/python_hello_user:1
+    image_secrets:  secrets_example.yaml
 
