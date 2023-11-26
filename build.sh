@@ -4,6 +4,9 @@ set -e -x
 
 export VERSION=${VERSION:-latest}
 export CAS_VERSION=${CAS_VERSION:-$VERSION}
+export HOST=${URL:-ceremony.scone.cloud}
+export PORT=${HOST:-8094}
+export URL="$HOST:$PORT"
 
 export RED='\e[31m'
 export BLUE='\e[34m'
@@ -12,11 +15,12 @@ export NC='\e[0m' # No Color
 
 APP_NAMESPACE=""
 source release.sh 2> /dev/null || true # get release name
-
+export UPLOAD_MODE=${UPLOAD_MODE:-"SignOnline"} # EncryptedManifest
 
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
 export APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
 export SCONECTL_REPO=${SCONECTL_REPO:-"registry.scontain.com/cicd"}
+export CEREMONY_CLIENT_PFX_KEY=${CEREMONY_CLIENT_PFX_KEY:-"1704221263011328318"}
 
 # print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
@@ -204,14 +208,17 @@ cat > build_incontainer.sh  <<EOF
 
 set -e -x
 export SCONECTL_REPO="$SCONECTL_REPO"
+echo "127.0.0.1       $HOST" >> /etc/hosts
 # create confidential service image
 apply -f service.yaml $verbose $debug  --set-version ${VERSION}
 # create confidential mesh
-apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION}
+apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION} -vvv  --signing-url ${URL}
 # copy generated helm chart
 echo Copy target/helm to helm repo
 EOF
 chmod +x build_incontainer.sh
+
+#  openssl s_client -showcerts -servername ceremony.scone.cloud -connect ceremony.scone.cloud:8008 2> /dev/null | openssl x509 > signing_server_cert.pem
 
 cat > Dockerfile <<EOF
 FROM $SCONECTL_REPO/sconecli:${VERSION}
@@ -222,6 +229,9 @@ COPY print_env.py /
 COPY requirements.txt /
 WORKDIR /
 CMD bash /build_incontainer.sh
+COPY rest_client_pfx.pfx /signing_client.pfx
+COPY signing_server_cert.pem /signing_server_cert.pem
+ENV CEREMONY_CLIENT_PFX_KEY="$CEREMONY_CLIENT_PFX_KEY"
 EOF
 
 export DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-"linux/amd64"}
@@ -230,4 +240,4 @@ DOCKER_BUILDKIT=1 docker build --build-arg VERSION  --no-cache \
      --network=host --platform $DOCKER_DEFAULT_PLATFORM . -t scone_mesh_tutorial:build
 
 echo "Run by executing"
-docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock     -v "$HOME/.docker:/root/.docker"     -v "$HOME/.cas:/root/.cas"     -v "$HOME/.scone:/root/.scone"     -w / scone_mesh_tutorial:build
+docker run -it --net host --rm -v /var/run/docker.sock:/var/run/docker.sock     -v "$HOME/.docker:/root/.docker"     -v "$HOME/.cas:/root/.cas"     -v "$HOME/.scone:/root/.scone"     -w / scone_mesh_tutorial:build

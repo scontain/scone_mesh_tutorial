@@ -7,7 +7,7 @@ cas:
     cas_url: $CAS_URL # cas.default  # exported as {{cas_cas_cas_url}}
     cas_key: $CAS_KEY
     tolerance: "--software-hardening-needed --insecure-configuration" # TCB out of date
-    mode: EncryptedManifest
+    mode: $UPLOAD_MODE
     cas_encryption_key: $CAS_SESSION_ENCRYPTION_KEY 
 
 policy:

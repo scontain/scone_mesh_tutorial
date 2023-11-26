@@ -79,9 +79,9 @@ then
 fi
 
 echo -e "${BLUE}Checking that you can pull the images ${NC}"
-if ! docker pull --platform linux/amd64 $SCONECTL_REPO/check_cpufeatures:${VERSION} &> /dev/null
+if ! docker pull --platform linux/amd64 $SCONECTL_REPO/check_cpufeatures:${VERSION} # &> /dev/null
 then
-    echo -e "${RED}Docker does NOT seem to be able to pull the required container images.${NC}"
+    echo -e "${RED}Docker does NOT seem to be able to pull the required container images ($SCONECTL_REPO/check_cpufeatures:${VERSION}).${NC}"
     echo -e "- ${ORANGE}1. Register an account with your company email at https://gitlab.scontain.com/users/sign_up.${NC}"
     echo -e "- ${ORANGE}2. Create an access token https://sconedocs.github.io/registry/#create-an-access-token${NC}"
     echo -e "- ${ORANGE}3. Log into your docker engine https://sconedocs.github.io/registry/#docker-login${NC}"

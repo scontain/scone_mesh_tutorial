@@ -24,13 +24,13 @@ I=0
 
 while [[ "$READY" != "true"  ]] ; do
     ((I=I+1))
-    if [[ $I -ge 32 ]] ; then
+    if [[ $I -ge 64 ]] ; then
         echo "Giving up waiting for $POD to become 'ready'"
         exit 1
     fi
     sleep 5
     export POD=$(kubectl get pods --namespace $NAMESPACE -l "app.kubernetes.io/name=$APP_NAME,app.kubernetes.io/instance=$RELEASE" -o jsonpath="{.items[0].metadata.name}" 2> /dev/null)
     export READY=$(kubectl get pod $POD -o jsonpath='{.status.containerStatuses[0].ready}' --namespace $NAMESPACE 2> /dev/null)
-    echo "  READY STATUS: $READY"
+    echo "  READY STATUS: $READY (POD=$POD)"
 done
 
