@@ -1,0 +1,25 @@
+--id
+CENTRALCAS
+--policyname
+mypolicy3
+--cas
+vec-in-lz
+--k8scontext
+lz-cas
+--namespace
+scone-system
+--stakeholder-namespace
+lz-stakeholders
+--url
+https://ceremony.scone.cloud:8091/sign_new_policy
+--client-identity
+signing_client.pfx
+--env-key
+SIGNING_CLIENT_PFX_KEY
+--server-cert-path
+signing_server_cert.pem
+--policy
+name: test\nversion: 0.3.10\n
+--policy-file
+policy.yaml
+--verbose

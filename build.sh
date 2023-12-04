@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e -x
+set -e
 
 export VERSION=${VERSION:-latest}
 export CAS_VERSION=${CAS_VERSION:-$VERSION}
@@ -20,7 +20,7 @@ export UPLOAD_MODE=${UPLOAD_MODE:-"SignOnline"} # EncryptedManifest
 DEFAULT_NAMESPACE="" # Default Kubernetes namespace to use
 export APP_IMAGE_REPO=${APP_IMAGE_REPO:=""} # Must be defined!
 export SCONECTL_REPO=${SCONECTL_REPO:-"registry.scontain.com/cicd"}
-export CEREMONY_CLIENT_PFX_KEY=${CEREMONY_CLIENT_PFX_KEY:-"1704221263011328318"}
+export SIGNING_CLIENT_PFX_KEY=${SIGNING_CLIENT_PFX_KEY:-"1704221263011328318"}
 
 # print an error message on an error exit
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
@@ -37,7 +37,7 @@ release_flag="--release"
 release_short_flag="-r"
 verbose=""
 debug_flag="--debug"
-debug_short_flag="-d"
+debug_short_flag="-x"
 debug=""
 cas_flag="--cas"
 cas_namespace_flag="--cas-namespace"
@@ -200,6 +200,7 @@ SCONE="\$SCONE" envsubst < service.yaml.template > service.yaml
 echo kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys
 
 source <(VERSION="$CAS_VERSION" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
+export CAS_URL="${CAS}.${CAS_NAMESPACE}"
 
 SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
@@ -212,7 +213,7 @@ echo "127.0.0.1       $HOST" >> /etc/hosts
 # create confidential service image
 apply -f service.yaml $verbose $debug  --set-version ${VERSION}
 # create confidential mesh
-apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION} -vvv  --signing-url ${URL}
+apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION} -vvvvv --signing-online
 # copy generated helm chart
 echo Copy target/helm to helm repo
 EOF
@@ -231,7 +232,9 @@ WORKDIR /
 CMD bash /build_incontainer.sh
 COPY rest_client_pfx.pfx /signing_client.pfx
 COPY signing_server_cert.pem /signing_server_cert.pem
-ENV CEREMONY_CLIENT_PFX_KEY="$CEREMONY_CLIENT_PFX_KEY"
+COPY argfile /argfile
+COPY policy.yaml /policy.yaml
+ENV SIGNING_CLIENT_PFX_KEY="$SIGNING_CLIENT_PFX_KEY"
 EOF
 
 export DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-"linux/amd64"}

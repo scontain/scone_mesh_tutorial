@@ -1,0 +1,9 @@
+name: mypolicy3
+version: 0.3.10
+
+access_policy:
+  read:
+    - ANY
+  update:
+    - NONE
+
