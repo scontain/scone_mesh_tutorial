@@ -202,6 +202,7 @@ echo kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys
 source <(VERSION="$CAS_VERSION" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --print-public-keys || exit 1)
 export CAS_URL="${CAS}.${CAS_NAMESPACE}"
 
+export CAS_URL="${CAS}.${CAS_NAMESPACE}"
 SCONE="\$SCONE" envsubst < mesh.yaml.template > mesh.yaml
 
 cat > build_incontainer.sh  <<EOF
@@ -213,7 +214,7 @@ echo "127.0.0.1       $HOST" >> /etc/hosts
 # create confidential service image
 apply -f service.yaml $verbose $debug  --set-version ${VERSION}
 # create confidential mesh
-apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION} -vvvvv --signing-online
+apply -f mesh.yaml --release "$RELEASE" $verbose $debug  --set-version ${VERSION} -vvvvv --signing-online  --signing-k8scontext central
 # copy generated helm chart
 echo Copy target/helm to helm repo
 EOF
@@ -225,6 +226,7 @@ cat > Dockerfile <<EOF
 FROM $SCONECTL_REPO/sconecli:${VERSION}
 COPY build_incontainer.sh /
 COPY mesh.yaml /
+COPY secrets_example.yaml /secrets_example.yaml
 COPY service.yaml /
 COPY print_env.py /
 COPY requirements.txt /
