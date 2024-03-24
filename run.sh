@@ -42,8 +42,8 @@ cas_namespace_flag="--cas-namespace"
 ns="$DEFAULT_NAMESPACE"
 repo="$APP_IMAGE_REPO"
 release="${RELEASE:=pythonapp}"
-export CAS="cas"
-export CAS_NAMESPACE="default"
+export CAS=${CAS:="cas"}
+export CAS_NAMESPACE=${CAS_NAMESPACE:="default"}
 
 error_exit() {
   trap '' EXIT
