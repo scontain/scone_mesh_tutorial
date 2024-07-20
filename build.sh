@@ -46,7 +46,7 @@ ns="$DEFAULT_NAMESPACE"
 repo="$APP_IMAGE_REPO"
 release="$RELEASE"
 export CAS=${CAS:="cas"}
-export CAS_NAMESPACE=${CAS_NAMESPACE:="default"}
+export CAS_NAMESPACE=${CAS_NAMESPACE:="scone-system"}
 
 error_exit() {
   trap '' EXIT

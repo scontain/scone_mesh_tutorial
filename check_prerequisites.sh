@@ -12,7 +12,7 @@ export NC='\e[0m' # No Color
 
 export SCONECTL_REPO=${SCONECTL_REPO:="registry.scontain.com/sconectl"}
 export CAS=${CAS:="cas"}
-export CAS_NAMESPACE=${CAS_NAMESPACE:="default"}
+export CAS_NAMESPACE=${CAS_NAMESPACE:="scone-system"}
 
 # print an error message on an error exiting
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
