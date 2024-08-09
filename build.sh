@@ -237,7 +237,7 @@ EOF
 export DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-"linux/amd64"}
 
 DOCKER_BUILDKIT=1 docker build --build-arg VERSION  --no-cache \
-     --network=host --platform $DOCKER_DEFAULT_PLATFORM . -t scone_mesh_tutorial:build
+      --platform $DOCKER_DEFAULT_PLATFORM . -t scone_mesh_tutorial:build
 
 echo "Run by executing"
 docker run -it --net host --rm -v /var/run/docker.sock:/var/run/docker.sock     -v "$HOME/.docker:/root/.docker"     -v "$HOME/.cas:/root/.cas"     -v "$HOME/.scone:/root/.scone"     -w / scone_mesh_tutorial:build
