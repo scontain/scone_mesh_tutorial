@@ -19,8 +19,12 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'if [ $? -ne 0 ]; then echo "${RED}\"${last_command}\" command failed - exiting.${NC}"; fi' EXIT
 
 function error_exit() {
-  trap 'echo -e  "${RED}Exiting with error.${NC}"' EXIT
-  exit 1
+    if [ -n "${FORCED_EXECUTION+x}" ]; then
+        echo -e "${ORANGE}FORCED_EXECUTION set ... skipping error exit${NC}"
+    else
+        trap 'echo -e  "${RED}Exiting with error - to skip error exit set FORCED_EXECUTION=1.${NC}"' EXIT
+        exit 1
+    fi
 }
 
 echo -e "${BLUE}Checking that we have access to sconectl${NC}"
@@ -157,6 +161,7 @@ if ! (kubectl get cas "$CAS" -n "$CAS_NAMESPACE" )
 then
     echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not yet running!${NC}"
     echo -e "- ${ORANGE}- You can install a cas as f    ollows: kubectl provision cas $CAS -n $CAS_NAMESPACE -v${NC}"
+    echo -e "If you want to use a different CAS instance instead, please set environment variables 'CAS' and 'CAS_NAMESPACE'"
     error_exit
 fi
 
