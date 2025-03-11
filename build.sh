@@ -177,7 +177,7 @@ export RELEASE="$release"
 
 if [ -z "$APP_NAMESPACE" ] ; then
     export APP_NAMESPACE="$RELEASE-$RANDOM-$RANDOM"
-    echo -e "export APP_NAMESPACE=$RELEASE-$RANDOM-$RANDOM\n" >> release.sh  
+    echo -e "export APP_NAMESPACE=$APP_NAMESPACE\n" >> release.sh  
 else 
     echo "CAS Namespace already defined: $APP_NAMESPACE"
 fi
@@ -240,4 +240,4 @@ DOCKER_BUILDKIT=1 docker build --build-arg VERSION  --no-cache \
       --platform $DOCKER_DEFAULT_PLATFORM . -t scone_mesh_tutorial:build
 
 echo "Run by executing"
-docker run -it --net host --rm -v /var/run/docker.sock:/var/run/docker.sock     -v "$HOME/.docker:/root/.docker"     -v "$HOME/.cas:/root/.cas"     -v "$HOME/.scone:/root/.scone"     -w / scone_mesh_tutorial:build
+docker run -it --net host --rm -v /var/run/docker.sock:/var/run/docker.sock     -v "$HOME/.docker:/home/root/.docker"     -v "$HOME/.cas:/home/root/.cas"     -v "$HOME/.scone:/home/root/.scone"     -w / scone_mesh_tutorial:build

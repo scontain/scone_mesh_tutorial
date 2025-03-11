@@ -180,6 +180,7 @@ echo -e "${BLUE}Checking health status of CAS '$CAS' in namespace '$CAS_NAMESPAC
 if ! VERSION="$CAS_VERSION" kubectl provision cas "$CAS" -n "$CAS_NAMESPACE" --is-provisioned
 then
     echo -e "${RED}It seems that CAS '$CAS' in namespace '$CAS_NAMESPACE' is not yet provisioned${NC}"
+    echo -e "- ${ORANGE}- Check that the version of CAS is indeed $CAS_VERSION:  kubectl get cas $CAS -n $CAS_NAMESPACE -v${NC}"
     echo -e "- ${ORANGE}- You can provision this cas as follows: kubectl provision cas $CAS $CAS_NAMESPACE -v${NC}"
     error_exit
 fi

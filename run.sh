@@ -181,7 +181,7 @@ export RELEASE="$release"
 
 if [ -z "$APP_NAMESPACE" ] ; then
     export APP_NAMESPACE="$RELEASE-$RANDOM-$RANDOM"
-    echo -e "export APP_NAMESPACE=$RELEASE-$RANDOM-$RANDOM\n" >> release.sh  
+    echo -e "export APP_NAMESPACE=$APP_NAMESPACE\n" >> release.sh  
 else 
     echo "CAS Namespace already defined: $APP_NAMESPACE"
 fi
