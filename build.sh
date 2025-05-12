@@ -240,4 +240,4 @@ DOCKER_BUILDKIT=1 docker build --build-arg VERSION  --no-cache \
       --platform $DOCKER_DEFAULT_PLATFORM . -t scone_mesh_tutorial:build
 
 echo "Run by executing"
-docker run -it --net host --rm -v /var/run/docker.sock:/var/run/docker.sock     -v "$HOME/.docker:/home/root/.docker"     -v "$HOME/.cas:/home/root/.cas"     -v "$HOME/.scone:/home/root/.scone"     -w / scone_mesh_tutorial:build
+docker run -it --net host --rm -v /var/run/docker.sock:/var/run/docker.sock     -v "$HOME/.docker:/home/nonroot/.docker"     -v "$HOME/.cas:/home/nonroot/.cas"     -v "$HOME/.scone:/home/nonroot/.scone"     -w / scone_mesh_tutorial:build
